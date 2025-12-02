@@ -14,12 +14,16 @@ https://doity.notion.site/Teste-FullStack-b67c69625967440e97d48d475af366c7?pvs=7
 
 ## 🎨 Design + UX (Figma)  
 Link do layout:  
-https://www.figma.com/design/pv3ebrXHaUZNHqsqR24Wvi/Desafio-Full-Stack?m=dev  
+https://www.figma.com/design/pv3ebrXHaUZNHqsqR24Wvi/Desafio-Full-Stack?m=dev
 
+### 🔐 Credenciais para acesso ao Figma  
+- Usuário: selecao@doity.com.br  
+- Senha: Selecao@dev123
+  
 ---
 
 ## 🔗 Vídeo explicativo
-Link do vídeo:
+Link do vídeo:  
 https://www.loom.com/share/e820a6488cef45bbad345b1e6be8e799
 
 ---
@@ -73,5 +77,5 @@ Grave um vídeo curto (Loom, YouTube não listado ou similar) explicando:
 ---
 
 ## 💬 Suporte  
-Caso tenha dificuldades ou dúvidas, entre em contato:  
+Se houver qualquer dúvida ou dificuldade (acesso a Doity, Figma, vídeos ou arquivo de links), entre em contato:  
 📩 lucyan@doity.com.br
