@@ -15,14 +15,14 @@ class Prestador extends AppModel {
     // Validações
     public $validate = array(
         'nome' => array(
-            'notEmpty' => array(
-                'rule' => 'notEmpty',
+            'notBlank' => array(
+                'rule' => 'notBlank',
                 'message' => 'O nome é obrigatório'
             )
         ),
         'sobrenome' => array(
-            'notEmpty' => array(
-                'rule' => 'notEmpty',
+            'notBlank' => array(
+                'rule' => 'notBlank',
                 'message' => 'O sobrenome é obrigatório'
             )
         ),
@@ -37,8 +37,8 @@ class Prestador extends AppModel {
             )
         ),
         'telefone' => array(
-            'notEmpty' => array(
-                'rule' => 'notEmpty',
+            'notBlank' => array(
+                'rule' => 'notBlank',
                 'message' => 'O telefone é obrigatório'
             )
         )

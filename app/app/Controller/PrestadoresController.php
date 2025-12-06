@@ -282,7 +282,18 @@ class PrestadoresController extends AppController {
     private function _salvarServicos($prestadorId, $servicos) {
         foreach ($servicos as $servicoId => $dados) {
             if (!empty($dados['checked']) || !empty($dados['valor'])) {
-                $valor = !empty($dados['valor']) ? $dados['valor'] : 0;
+                // Limpar valor (remover R$, pontos e trocar vírgula por ponto)
+                $valor = !empty($dados['valor']) ? $dados['valor'] : '0';
+                
+                // Remover "R$", espaços, pontos (milhares)
+                $valor = str_replace('R$', '', $valor);
+                $valor = str_replace(' ', '', $valor);
+                $valor = str_replace('.', '', $valor);
+                // Trocar vírgula por ponto
+                $valor = str_replace(',', '.', $valor);
+                
+                // Converter para float
+                $valor = floatval($valor);
                 
                 $this->PrestadorServico->create();
                 $this->PrestadorServico->save(array(
