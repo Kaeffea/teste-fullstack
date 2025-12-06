@@ -8,6 +8,8 @@ App::uses('AppModel', 'Model');
 class PrestadorServico extends AppModel {
     
     public $name = 'PrestadorServico';
+
+    public $useTable = 'prestadores_servicos';
     
     public $actsAs = array('Containable');
     
