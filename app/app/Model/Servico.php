@@ -16,8 +16,8 @@ class Servico extends AppModel {
     // Validações
     public $validate = array(
         'nome' => array(
-            'notEmpty' => array(
-                'rule' => 'notEmpty',
+            'notBlank' => array(
+                'rule' => 'notBlank',
                 'message' => 'O nome do serviço é obrigatório'
             )
         )

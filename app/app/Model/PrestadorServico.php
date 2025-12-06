@@ -32,8 +32,8 @@ class PrestadorServico extends AppModel {
                 'rule' => array('decimal', 2),
                 'message' => 'Valor inválido'
             ),
-            'notEmpty' => array(
-                'rule' => 'notEmpty',
+            'notBlank' => array(
+                'rule' => 'notBlank',
                 'message' => 'O valor é obrigatório'
             )
         )
