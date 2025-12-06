@@ -1,0 +1,43 @@
+services:
+  # Container PHP + Apache + CakePHP
+  app:
+    build: .
+    container_name: cakephp_app
+    ports:
+      - "8080:80"
+    volumes:
+      - ./app:/var/www/html
+    depends_on:
+      - db
+    environment:
+      - APACHE_DOCUMENT_ROOT=/var/www/html/app/webroot
+
+  # Container MySQL
+  db:
+    image: mysql:5.7
+    container_name: cakephp_db
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: teste_joao
+      MYSQL_USER: cakephp
+      MYSQL_PASSWORD: cakephp123
+    volumes:
+      - db_data:/var/lib/mysql
+
+  # Container phpMyAdmin (para gerenciar banco visualmente)
+  phpmyadmin:
+    image: phpmyadmin:latest
+    container_name: cakephp_phpmyadmin
+    ports:
+      - "8081:80"
+    environment:
+      PMA_HOST: db
+      PMA_USER: root
+      PMA_PASSWORD: root
+    depends_on:
+      - db
+
+volumes:
+  db_data:
