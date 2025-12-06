@@ -9,13 +9,14 @@
     <!-- Formulário -->
     <div class="form-container">
         <?php echo $this->Form->create('Prestador', array(
+            'url' => array('controller' => 'prestadores', 'action' => 'add'),
             'type' => 'file',
             'inputDefaults' => array(
                 'label' => false,
                 'div' => false
             )
         )); ?>
-        
+                
         <!-- Seção: Informações Pessoais -->
         <div class="form-section">
             <h2 class="form-section-title">Informações pessoais</h2>
