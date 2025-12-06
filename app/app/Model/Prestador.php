@@ -9,6 +9,8 @@ class Prestador extends AppModel {
     
     public $name = 'Prestador';
     
+    public $useTable = 'prestadores';
+
     // Campos que serão preenchidos automaticamente
     public $actsAs = array('Containable');
     

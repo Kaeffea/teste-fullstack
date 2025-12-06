@@ -9,6 +9,8 @@ class Servico extends AppModel {
     
     public $name = 'Servico';
     
+    public $useTable = 'servicos';
+    
     public $actsAs = array('Containable');
     
     // Validações
