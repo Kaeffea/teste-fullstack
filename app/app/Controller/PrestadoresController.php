@@ -396,6 +396,12 @@ class PrestadoresController extends AppController {
             return $this->redirect(array('action' => 'importar'));
         }
         
+        // Validar tamanho (25MB)
+        if ($arquivo['size'] > 26214400) {
+            $this->Session->setFlash('Arquivo muito grande. Máximo 25MB.', 'default', array('class' => 'alert alert-error'));
+            return $this->redirect(array('action' => 'importar'));
+        }
+        
         // Ler arquivo CSV
         $dados = $this->_lerCSV($arquivo['tmp_name']);
         
@@ -407,13 +413,30 @@ class PrestadoresController extends AppController {
         // Processar importação
         $sucessos = 0;
         $erros = 0;
+        $avisos = 0;
         $mensagensErro = array();
+        $mensagensAviso = array();
         
         foreach ($dados as $linha => $prestador) {
+            $numeroLinha = $linha + 2; // +2 porque linha 1 é cabeçalho
+            
             // Validar dados obrigatórios
-            if (empty($prestador['nome']) || empty($prestador['email'])) {
+            if (empty($prestador['nome'])) {
                 $erros++;
-                $mensagensErro[] = "Linha " . ($linha + 2) . ": Nome e email são obrigatórios";
+                $mensagensErro[] = "Linha $numeroLinha: Nome é obrigatório";
+                continue;
+            }
+            
+            if (empty($prestador['email'])) {
+                $erros++;
+                $mensagensErro[] = "Linha $numeroLinha: Email é obrigatório";
+                continue;
+            }
+            
+            // Validar formato de email
+            if (!filter_var($prestador['email'], FILTER_VALIDATE_EMAIL)) {
+                $erros++;
+                $mensagensErro[] = "Linha $numeroLinha: Email '{$prestador['email']}' inválido";
                 continue;
             }
             
@@ -424,56 +447,164 @@ class PrestadoresController extends AppController {
             
             if ($existe > 0) {
                 $erros++;
-                $mensagensErro[] = "Linha " . ($linha + 2) . ": Email {$prestador['email']} já cadastrado";
+                $mensagensErro[] = "Linha $numeroLinha: Email '{$prestador['email']}' já cadastrado";
                 continue;
             }
             
             // Preparar dados para salvar
             $dadosPrestador = array(
                 'Prestador' => array(
-                    'nome' => $prestador['nome'],
-                    'sobrenome' => isset($prestador['sobrenome']) ? $prestador['sobrenome'] : '',
-                    'email' => $prestador['email'],
-                    'telefone' => isset($prestador['telefone']) ? $prestador['telefone'] : ''
+                    'nome' => trim($prestador['nome']),
+                    'sobrenome' => isset($prestador['sobrenome']) ? trim($prestador['sobrenome']) : '',
+                    'email' => trim($prestador['email']),
+                    'telefone' => isset($prestador['telefone']) ? trim($prestador['telefone']) : ''
                 )
             );
             
             // Salvar prestador
             $this->Prestador->create();
             if ($this->Prestador->save($dadosPrestador)) {
+                $prestadorId = $this->Prestador->id;
                 $sucessos++;
                 
-                // Se tiver serviços, associar
-                if (!empty($prestador['servicos']) && !empty($prestador['valores'])) {
-                    $this->_associarServicosImportacao(
-                        $this->Prestador->id, 
-                        $prestador['servicos'], 
-                        $prestador['valores']
+                // Se tiver serviços, processar
+                if (!empty($prestador['servicos'])) {
+                    $resultadoServicos = $this->_processarServicosImportacao(
+                        $prestadorId,
+                        $prestador['servicos'],
+                        isset($prestador['valores']) ? $prestador['valores'] : array(),
+                        $numeroLinha
                     );
+                    
+                    if (!empty($resultadoServicos['avisos'])) {
+                        $avisos += count($resultadoServicos['avisos']);
+                        $mensagensAviso = array_merge($mensagensAviso, $resultadoServicos['avisos']);
+                    }
                 }
             } else {
                 $erros++;
-                $mensagensErro[] = "Linha " . ($linha + 2) . ": Erro ao salvar prestador";
+                $mensagensErro[] = "Linha $numeroLinha: Erro ao salvar prestador";
             }
         }
+            
+    // Preparar mensagem de resultado
+    $mensagemFinal = '';
+
+    if ($sucessos > 0) {
+        $mensagemFinal = "$sucessos prestador(es) importado(s) com sucesso!";
         
-        // Mensagem de resultado
-        if ($sucessos > 0) {
-            $msg = "$sucessos prestador(es) importado(s) com sucesso!";
-            if ($erros > 0) {
-                $msg .= " $erros erro(s) encontrado(s).";
-            }
-            $this->Session->setFlash($msg, 'default', array('class' => 'alert alert-success'));
+        if ($erros > 0) {
+            $mensagemFinal .= " | $erros erro(s) encontrado(s)";
+        }
+        
+        if ($avisos > 0) {
+            $mensagemFinal .= " | $avisos aviso(s)";
+        }
+
+        // Define tipo da importação para o modal:
+        // - total  = tudo certo (verde)
+        // - parcial = teve erro/aviso (amarelo)
+        if ($erros > 0 || $avisos > 0) {
+            $this->Session->write('importacao_tipo', 'parcial');
         } else {
-            $this->Session->setFlash('Nenhum prestador foi importado. Verifique o arquivo.', 'default', array('class' => 'alert alert-error'));
+            $this->Session->write('importacao_tipo', 'total');
         }
         
-        // Salvar erros em sessão para exibir
-        if (!empty($mensagensErro)) {
-            $this->Session->write('erros_importacao', $mensagensErro);
+        $this->Session->write('importacao_sucesso', true);
+        $this->Session->setFlash($mensagemFinal, 'default', array('class' => 'alert alert-success'));
+    } else {
+        // Nenhum registro salvo → modal vermelho
+        $this->Session->delete('importacao_sucesso');
+        $this->Session->delete('importacao_tipo');
+
+        $this->Session->setFlash(
+            'Nenhum prestador foi importado. Verifique os erros abaixo.',
+            'default',
+            array('class' => 'alert alert-error')
+        );
+    }
+
+    // Salvar detalhes em sessão (tanto para sucesso parcial quanto erro total)
+    if (!empty($mensagensErro)) {
+        $this->Session->write('erros_importacao', $mensagensErro);
+    }
+
+    if (!empty($mensagensAviso)) {
+        $this->Session->write('avisos_importacao', $mensagensAviso);
+    }
+
+    return $this->redirect(array('action' => 'index'));
+
+
+
+    }
+    
+    /**
+     * _processarServicosImportacao - Processa serviços na importação
+     * Cria serviços automaticamente se não existirem
+     * @param int $prestadorId
+     * @param array $nomeServicos
+     * @param array $valores
+     * @param int $numeroLinha
+     * @return array - array com 'avisos'
+     */
+    private function _processarServicosImportacao($prestadorId, $nomeServicos, $valores, $numeroLinha) {
+        $avisos = array();
+        
+        foreach ($nomeServicos as $index => $nomeServico) {
+            $nomeServico = trim($nomeServico);
+            
+            if (empty($nomeServico)) {
+                continue;
+            }
+            
+            // Buscar serviço pelo nome (case insensitive)
+            $servico = $this->Servico->find('first', array(
+                'conditions' => array('LOWER(Servico.nome)' => strtolower($nomeServico)),
+                'fields' => array('Servico.id', 'Servico.nome')
+            ));
+            
+            // Se não existe, criar automaticamente
+            if (empty($servico)) {
+                $this->Servico->create();
+                $novoServico = array(
+                    'Servico' => array(
+                        'nome' => $nomeServico,
+                        'descricao' => 'Serviço criado automaticamente via importação CSV'
+                    )
+                );
+                
+                if ($this->Servico->save($novoServico)) {
+                    $servicoId = $this->Servico->id;
+                    $avisos[] = "Linha $numeroLinha: Serviço '$nomeServico' foi criado automaticamente";
+                } else {
+                    $avisos[] = "Linha $numeroLinha: Erro ao criar serviço '$nomeServico'";
+                    continue;
+                }
+            } else {
+                $servicoId = $servico['Servico']['id'];
+            }
+            
+            // Pegar valor correspondente
+            $valor = isset($valores[$index]) ? $this->_limparValor($valores[$index]) : 0;
+            
+            // Validar valor
+            if ($valor <= 0) {
+                $avisos[] = "Linha $numeroLinha: Serviço '$nomeServico' sem valor válido (será R$ 0,00)";
+            }
+            
+            // Salvar relação
+            $this->PrestadorServico->create();
+            $this->PrestadorServico->save(array(
+                'PrestadorServico' => array(
+                    'prestador_id' => $prestadorId,
+                    'servico_id' => $servicoId,
+                    'valor' => $valor
+                )
+            ));
         }
         
-        return $this->redirect(array('action' => 'index'));
+        return array('avisos' => $avisos);
     }
     
     /**
@@ -667,6 +798,23 @@ class PrestadoresController extends AppController {
                 'success' => false,
                 'message' => 'Erro ao cadastrar serviço'
             ));
+        }
+    }
+
+    /**
+     * limpar_sessao_importacao - Limpa dados de importação da sessão
+     * POST /prestadores/limpar_sessao_importacao
+     */
+    public function limpar_sessao_importacao() {
+        $this->autoRender = false;
+        
+        if ($this->request->is('ajax') || $this->request->is('post')) {
+            $this->Session->delete('importacao_sucesso');
+            $this->Session->delete('importacao_tipo');  
+            $this->Session->delete('erros_importacao');
+            $this->Session->delete('avisos_importacao');
+            
+            echo json_encode(array('success' => true));
         }
     }
 }
