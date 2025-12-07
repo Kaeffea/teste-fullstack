@@ -108,11 +108,11 @@ class PrestadoresController extends AppController {
             }
         }
         
-        // Buscar todos os serviços para o formulário
         $servicos = $this->Servico->find('list', array(
-            'fields' => array('Servico.id', 'Servico.nome')
+            'fields' => array('Servico.id', 'Servico.nome'),
+            'order' => array('Servico.nome' => 'ASC')
         ));
-        
+
         $this->set('servicos', $servicos);
     }
     
@@ -187,9 +187,10 @@ class PrestadoresController extends AppController {
         
         // Buscar todos os serviços
         $servicos = $this->Servico->find('list', array(
-            'fields' => array('Servico.id', 'Servico.nome')
+            'fields' => array('Servico.id', 'Servico.nome'),
+            'order' => array('Servico.nome' => 'ASC')
         ));
-        
+
         $this->set('servicos', $servicos);
     }
     
