@@ -319,50 +319,55 @@ class PrestadoresController extends AppController {
     }
     
     /**
-     * _salvarServicos - Salva relação prestador x serviços com preços
-     * @param int $prestadorId
-     * @param array $servicos - array com [servico_id => ['valor' => X]]
-     */
-    private function _salvarServicos($prestadorId, $servicos) {
-        foreach ($servicos as $servicoId => $dados) {
-            // Verifica se o checkbox está marcado OU se tem valor preenchido
-            $checked = !empty($dados['checked']) || (isset($dados['checked']) && $dados['checked'] == '1');
-            
-            if ($checked && !empty($dados['valor'])) {
-                // Limpar valor (remover R$, pontos e trocar vírgula por ponto)
-                $valor = $dados['valor'];
-                
-                // Se já vier como número (ex: 200.00), não precisa limpar
-                if (!is_numeric($valor)) {
-                    $valor = preg_replace('/[^0-9.,]/', '', $valor);
-                    if (strpos($valor, ',') !== false) {
-                        $valor = str_replace('.', '', $valor); // Remove ponto de milhar
-                        $valor = str_replace(',', '.', $valor); // Troca vírgula decimal por ponto
-                    }
-                }
-                
-                // Converter para float
-                $valor = floatval($valor);
-                
-                // Só salvar se o valor for maior que zero
-                if ($valor > 0) {
-                    $this->PrestadorServico->create();
-                    $resultado = $this->PrestadorServico->save(array(
-                        'PrestadorServico' => array(
-                            'prestador_id' => $prestadorId,
-                            'servico_id' => $servicoId,
-                            'valor' => $valor
-                        )
-                    ));
-                    
-                    // Debug (remover depois)
-                    if (!$resultado) {
-                        $this->log("Erro ao salvar serviço $servicoId para prestador $prestadorId", 'debug');
-                    }
-                }
+ * _salvarServicos - Salva relação prestador x serviços com preços
+ * @param int   $prestadorId
+ * @param array $servicos - array com [servico_id => ['valor' => X, 'checked' => '1']]
+ */
+private function _salvarServicos($prestadorId, $servicos) {
+    foreach ($servicos as $servicoId => $dados) {
+
+        // Verifica se o checkbox está marcado
+        $checked = !empty($dados['checked']) || (isset($dados['checked']) && $dados['checked'] == '1');
+
+        if (!$checked) {
+            // Se não estiver marcado, ignora
+            continue;
+        }
+
+        // Pega o valor bruto que veio do formulário (ou vazio)
+        $valorBruto = isset($dados['valor']) ? $dados['valor'] : '';
+
+        // Se vier vazio, consideramos 0.00
+        if ($valorBruto === '' || $valorBruto === null) {
+            $valor = 0.0;
+        } else {
+            // Usa o mesmo padrão de limpeza do restante do sistema
+            $valor = $this->_limparValor($valorBruto);
+
+            // Se por algum motivo vier negativo/nan, força 0
+            if (!is_numeric($valor) || $valor < 0) {
+                $valor = 0.0;
             }
         }
+
+        // Agora sempre salva quando estiver marcado,
+        // mesmo que o valor seja 0.00
+        $this->PrestadorServico->create();
+        $resultado = $this->PrestadorServico->save(array(
+            'PrestadorServico' => array(
+                'prestador_id' => $prestadorId,
+                'servico_id'   => $servicoId,
+                'valor'        => $valor
+            )
+        ));
+
+        // Debug opcional
+        if (!$resultado) {
+            $this->log("Erro ao salvar serviço $servicoId para prestador $prestadorId (valor = $valor)", 'debug');
+        }
     }
+}
+
 
     /**
      * importar - Exibe formulário de importação
@@ -817,4 +822,165 @@ class PrestadoresController extends AppController {
             echo json_encode(array('success' => true));
         }
     }
+
+/**
+ * detalhes_servico - Retorna dados de um serviço em JSON (para modal)
+ * GET /prestadores/detalhes_servico/:id
+ */
+public function detalhes_servico($id = null) {
+    $this->autoRender = false;
+    $this->response->type('json');
+
+    $id = (int)$id;
+    if (!$id) {
+        echo json_encode(array(
+            'success' => false,
+            'message' => 'Serviço inválido.'
+        ));
+        return;
+    }
+
+    $servico = $this->Servico->findById($id);
+    if (empty($servico)) {
+        echo json_encode(array(
+            'success' => false,
+            'message' => 'Serviço não encontrado.'
+        ));
+        return;
+    }
+
+    echo json_encode(array(
+        'success' => true,
+        'servico' => array(
+            'id'        => (int)$servico['Servico']['id'],
+            'nome'      => $servico['Servico']['nome'],
+            'descricao' => $servico['Servico']['descricao']
+        )
+    ));
+}
+
+/**
+ * atualizar_servico - Atualiza nome e descrição de um serviço
+ * POST /prestadores/atualizar_servico
+ */
+public function atualizar_servico() {
+    $this->autoRender = false;
+    $this->response->type('json');
+
+    if (!$this->request->is('post')) {
+        echo json_encode(array(
+            'success' => false,
+            'message' => 'Requisição inválida.'
+        ));
+        return;
+    }
+
+    $id   = isset($this->request->data['id']) ? (int)$this->request->data['id'] : 0;
+    $nome = isset($this->request->data['nome']) ? trim($this->request->data['nome']) : '';
+    $desc = isset($this->request->data['descricao']) ? trim($this->request->data['descricao']) : '';
+
+    if (!$id || $nome === '') {
+        echo json_encode(array(
+            'success' => false,
+            'message' => 'ID e nome do serviço são obrigatórios.'
+        ));
+        return;
+    }
+
+    if (!$this->Servico->exists($id)) {
+        echo json_encode(array(
+            'success' => false,
+            'message' => 'Serviço não encontrado.'
+        ));
+        return;
+    }
+
+    // Impede serviços com nomes duplicados
+    $existe = $this->Servico->find('count', array(
+        'conditions' => array(
+            'Servico.nome' => $nome,
+            'Servico.id !=' => $id
+        )
+    ));
+
+    if ($existe > 0) {
+        echo json_encode(array(
+            'success' => false,
+            'message' => 'Já existe outro serviço com este nome.'
+        ));
+        return;
+    }
+
+    $this->Servico->id = $id;
+    $ok = $this->Servico->save(array(
+        'Servico' => array(
+            'nome'       => $nome,
+            'descricao'  => $desc
+        )
+    ));
+
+    if ($ok) {
+        echo json_encode(array(
+            'success' => true
+        ));
+    } else {
+        echo json_encode(array(
+            'success' => false,
+            'message' => 'Erro ao salvar o serviço.'
+        ));
+    }
+}
+
+/**
+ * excluir_servico - Exclui um serviço (e seus vínculos)
+ * POST /prestadores/excluir_servico/:id
+ */
+public function excluir_servico($id = null) {
+    $this->autoRender = false;
+    $this->response->type('json');
+
+    if (!$this->request->is('post')) {
+        echo json_encode(array(
+            'success' => false,
+            'message' => 'Requisição inválida.'
+        ));
+        return;
+    }
+
+    $id = (int)$id;
+    if (!$id) {
+        echo json_encode(array(
+            'success' => false,
+            'message' => 'Serviço inválido.'
+        ));
+        return;
+    }
+
+    if (!$this->Servico->exists($id)) {
+        echo json_encode(array(
+            'success' => false,
+            'message' => 'Serviço não encontrado.'
+        ));
+        return;
+    }
+
+    // Remove vínculos com prestadores
+    $this->PrestadorServico->deleteAll(
+        array('PrestadorServico.servico_id' => $id),
+        false
+    );
+
+    if ($this->Servico->delete($id)) {
+        echo json_encode(array(
+            'success' => true
+        ));
+    } else {
+        echo json_encode(array(
+            'success' => false,
+            'message' => 'Erro ao excluir o serviço.'
+        ));
+    }
+}
+
+
 }
