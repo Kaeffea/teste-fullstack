@@ -9,6 +9,7 @@
     <!-- Formulário -->
     <div class="form-container">
         <?php echo $this->Form->create('Prestador', array(
+            'url' => array('controller' => 'prestadores', 'action' => 'edit', $this->request->data['Prestador']['id']),
             'type' => 'file',
             'inputDefaults' => array(
                 'label' => false,
@@ -147,7 +148,6 @@
                 Cadastrar serviço
             </button>
         </div>
-        
         <!-- Botões do Formulário -->
         <div class="form-actions">
             <?php echo $this->Html->link('Cancelar', 

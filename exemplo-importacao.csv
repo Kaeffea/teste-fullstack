@@ -1,0 +1,4 @@
+nome;sobrenome;email;telefone;servicos;valores
+Carlos;Mendes;carlos@teste.com;(82) 99604-9204;Planejamento e Arquitetura;250.00
+Ana;Costa;ana@teste.com;(82) 99604-9205;Design e Implementação do Frontend|Desenvolvimento do Backend e APIs;300.00|400.00
+Pedro;Lima;pedro@teste.com;(82) 99604-9206;Diagnóstico e Consultoria Inicial;200.00

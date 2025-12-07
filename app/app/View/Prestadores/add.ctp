@@ -9,13 +9,14 @@
     <!-- Formulário -->
     <div class="form-container">
         <?php echo $this->Form->create('Prestador', array(
+            'url' => array('controller' => 'prestadores', 'action' => 'add'),
             'type' => 'file',
             'inputDefaults' => array(
                 'label' => false,
                 'div' => false
             )
         )); ?>
-        
+                
         <!-- Seção: Informações Pessoais -->
         <div class="form-section">
             <h2 class="form-section-title">Informações pessoais</h2>
@@ -211,20 +212,58 @@ document.getElementById('telefone').addEventListener('input', function(e) {
 function toggleValorInput(id) {
     const checkbox = document.getElementById('servico_' + id);
     const valorInput = document.getElementById('valor_' + id);
-    valorInput.disabled = !checkbox.checked;
-    if (!checkbox.checked) {
-        valorInput.value = '';
+    
+    if (checkbox.checked) {
+        valorInput.disabled = false;
+        valorInput.focus(); // Focar no campo
+    } else {
+        valorInput.disabled = true;
+        valorInput.value = ''; // Limpar valor
     }
 }
 
+// Ao carregar a página, habilitar inputs dos checkboxes já marcados
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('input[type="checkbox"]').forEach(function(checkbox) {
+        const id = checkbox.id.replace('servico_', '');
+        if (checkbox.checked) {
+            document.getElementById('valor_' + id).disabled = false;
+        }
+    });
+});
+
+// Máscara de valor (R$)
 // Máscara de valor (R$)
 document.querySelectorAll('.valor-input').forEach(function(input) {
+    // Ao digitar
     input.addEventListener('input', function(e) {
         let value = e.target.value.replace(/\D/g, '');
-        value = (value / 100).toFixed(2);
-        value = value.replace('.', ',');
-        value = value.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
-        e.target.value = 'R$ ' + value;
+        if (value) {
+            value = (parseFloat(value) / 100).toFixed(2);
+            value = value.replace('.', ',');
+            value = value.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+            e.target.value = 'R$ ' + value;
+        }
+    });
+    
+    // Ao sair do campo (garantir formato)
+    input.addEventListener('blur', function(e) {
+        let value = e.target.value.replace(/\D/g, '');
+        if (value) {
+            value = (parseFloat(value) / 100).toFixed(2);
+            e.target.value = value; // Salvar apenas o número
+        }
+    });
+    
+    // Ao focar (mostrar formatado)
+    input.addEventListener('focus', function(e) {
+        let value = e.target.value.replace(/\D/g, '');
+        if (value) {
+            value = (parseFloat(value) / 100).toFixed(2);
+            value = value.replace('.', ',');
+            value = value.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+            e.target.value = 'R$ ' + value;
+        }
     });
 });
 
@@ -259,5 +298,17 @@ document.getElementById('modal-servico').addEventListener('click', function(e) {
     if (e.target === this) {
         fecharModalServico();
     }
+});
+
+document.getElementById('PrestadorAddForm').addEventListener('submit', function(e) {
+    console.log('=== DADOS DO FORMULÁRIO ===');
+    
+    // Serviços selecionados
+    document.querySelectorAll('input[type="checkbox"]:checked').forEach(function(checkbox) {
+        const servicoId = checkbox.id.replace('servico_', '');
+        const valorInput = document.getElementById('valor_' + servicoId);
+        console.log('Serviço ID:', servicoId);
+        console.log('Valor:', valorInput.value);
+    });
 });
 </script>

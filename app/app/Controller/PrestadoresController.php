@@ -43,6 +43,7 @@ class PrestadoresController extends AppController {
         
         // Busca (se houver termo de busca)
         $conditions = array();
+        $busca = '';
         if (!empty($this->request->query['busca'])) {
             $busca = $this->request->query['busca'];
             $conditions['OR'] = array(
@@ -52,8 +53,13 @@ class PrestadoresController extends AppController {
             );
         }
         
+        // Aplicar condições na configuração do Paginator
+        if (!isset($this->Paginator->settings['Prestador'])) {
+            $this->Paginator->settings['Prestador'] = array();
+        }
+        $this->Paginator->settings['Prestador']['conditions'] = $conditions;
+        
         // Buscar prestadores com paginação
-        $this->Paginator->settings['conditions'] = $conditions;
         $prestadores = $this->Paginator->paginate('Prestador');
         
         // Para cada prestador, buscar os serviços com preço
@@ -68,19 +74,14 @@ class PrestadoresController extends AppController {
         
         // Enviar para a view
         $this->set('prestadores', $prestadores);
-        $this->set('busca', isset($busca) ? $busca : '');
+        $this->set('busca', $busca);
     }
     
-    /**
-     * add - Adicionar novo prestador
-     * GET /prestadores/add (exibe formulário)
-     * POST /prestadores/add (processa dados)
-     */
     public function add() {
         if ($this->request->is('post')) {
             $this->Prestador->create();
             
-            // Upload da foto
+            // Upload da foto (Mantenha seu código de upload aqui)
             if (!empty($this->request->data['Prestador']['foto']['name'])) {
                 $foto = $this->_uploadFoto($this->request->data['Prestador']['foto']);
                 if ($foto) {
@@ -92,7 +93,6 @@ class PrestadoresController extends AppController {
                 unset($this->request->data['Prestador']['foto']);
             }
             
-            // Salvar prestador
             if ($this->Prestador->save($this->request->data)) {
                 $prestadorId = $this->Prestador->id;
                 
@@ -225,6 +225,49 @@ class PrestadoresController extends AppController {
         
         return $this->redirect(array('action' => 'index'));
     }
+
+    /**
+     * deleteSelected - Excluir múltiplos prestadores
+     * POST /prestadores/deleteSelected
+     */
+    public function deleteSelected() {
+        if (!$this->request->is('post')) {
+            throw new MethodNotAllowedException();
+        }
+
+        $ids = array();
+        if (!empty($this->request->data['ids']) && is_array($this->request->data['ids'])) {
+            $ids = array_map('intval', $this->request->data['ids']);
+        }
+
+        if (empty($ids)) {
+            $this->Session->setFlash('Nenhum prestador selecionado para exclusão.', 'default', array('class' => 'alert alert-error'));
+            return $this->redirect(array('action' => 'index'));
+        }
+
+        // Busca todos os prestadores para poder apagar as fotos depois
+        $prestadores = $this->Prestador->find('all', array(
+            'conditions' => array('Prestador.id' => $ids),
+            'fields' => array('Prestador.id', 'Prestador.foto')
+        ));
+
+        // Exclui todos
+        $this->Prestador->deleteAll(
+            array('Prestador.id' => $ids),
+            true,   // cascade
+            true    // callbacks
+        );
+
+        // Deleta as fotos físicas
+        foreach ($prestadores as $p) {
+            if (!empty($p['Prestador']['foto'])) {
+                $this->_deletarFoto($p['Prestador']['foto']);
+            }
+        }
+
+        $this->Session->setFlash('Prestadores excluídos com sucesso!', 'default', array('class' => 'alert alert-success'));
+        return $this->redirect(array('action' => 'index'));
+    }
     
     /**
      * _uploadFoto - Processa upload de foto
@@ -281,29 +324,278 @@ class PrestadoresController extends AppController {
      */
     private function _salvarServicos($prestadorId, $servicos) {
         foreach ($servicos as $servicoId => $dados) {
-            if (!empty($dados['checked']) || !empty($dados['valor'])) {
+            // Verifica se o checkbox está marcado OU se tem valor preenchido
+            $checked = !empty($dados['checked']) || (isset($dados['checked']) && $dados['checked'] == '1');
+            
+            if ($checked && !empty($dados['valor'])) {
                 // Limpar valor (remover R$, pontos e trocar vírgula por ponto)
-                $valor = !empty($dados['valor']) ? $dados['valor'] : '0';
+                $valor = $dados['valor'];
                 
-                // Remover "R$", espaços, pontos (milhares)
-                $valor = str_replace('R$', '', $valor);
-                $valor = str_replace(' ', '', $valor);
-                $valor = str_replace('.', '', $valor);
-                // Trocar vírgula por ponto
-                $valor = str_replace(',', '.', $valor);
+                // Se já vier como número (ex: 200.00), não precisa limpar
+                if (!is_numeric($valor)) {
+                    $valor = preg_replace('/[^0-9.,]/', '', $valor);
+                    if (strpos($valor, ',') !== false) {
+                        $valor = str_replace('.', '', $valor); // Remove ponto de milhar
+                        $valor = str_replace(',', '.', $valor); // Troca vírgula decimal por ponto
+                    }
+                }
                 
                 // Converter para float
                 $valor = floatval($valor);
+                
+                // Só salvar se o valor for maior que zero
+                if ($valor > 0) {
+                    $this->PrestadorServico->create();
+                    $resultado = $this->PrestadorServico->save(array(
+                        'PrestadorServico' => array(
+                            'prestador_id' => $prestadorId,
+                            'servico_id' => $servicoId,
+                            'valor' => $valor
+                        )
+                    ));
+                    
+                    // Debug (remover depois)
+                    if (!$resultado) {
+                        $this->log("Erro ao salvar serviço $servicoId para prestador $prestadorId", 'debug');
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * importar - Exibe formulário de importação
+     * GET /prestadores/importar
+     */
+    public function importar() {
+        // Apenas exibe o formulário
+    }
+    
+    /**
+     * processar_importacao - Processa arquivo CSV
+     * POST /prestadores/processar_importacao
+     */
+    public function processar_importacao() {
+        if (!$this->request->is('post')) {
+            return $this->redirect(array('action' => 'index'));
+        }
+        
+        // Verificar se arquivo foi enviado
+        if (empty($this->request->data['Prestador']['arquivo']['name'])) {
+            $this->Session->setFlash('Por favor, selecione um arquivo CSV.', 'default', array('class' => 'alert alert-error'));
+            return $this->redirect(array('action' => 'importar'));
+        }
+        
+        $arquivo = $this->request->data['Prestador']['arquivo'];
+        
+        // Validar extensão
+        $extensao = pathinfo($arquivo['name'], PATHINFO_EXTENSION);
+        if (strtolower($extensao) !== 'csv') {
+            $this->Session->setFlash('Por favor, envie um arquivo CSV válido.', 'default', array('class' => 'alert alert-error'));
+            return $this->redirect(array('action' => 'importar'));
+        }
+        
+        // Ler arquivo CSV
+        $dados = $this->_lerCSV($arquivo['tmp_name']);
+        
+        if (empty($dados)) {
+            $this->Session->setFlash('Arquivo CSV vazio ou inválido.', 'default', array('class' => 'alert alert-error'));
+            return $this->redirect(array('action' => 'importar'));
+        }
+        
+        // Processar importação
+        $sucessos = 0;
+        $erros = 0;
+        $mensagensErro = array();
+        
+        foreach ($dados as $linha => $prestador) {
+            // Validar dados obrigatórios
+            if (empty($prestador['nome']) || empty($prestador['email'])) {
+                $erros++;
+                $mensagensErro[] = "Linha " . ($linha + 2) . ": Nome e email são obrigatórios";
+                continue;
+            }
+            
+            // Verificar se email já existe
+            $existe = $this->Prestador->find('count', array(
+                'conditions' => array('Prestador.email' => $prestador['email'])
+            ));
+            
+            if ($existe > 0) {
+                $erros++;
+                $mensagensErro[] = "Linha " . ($linha + 2) . ": Email {$prestador['email']} já cadastrado";
+                continue;
+            }
+            
+            // Preparar dados para salvar
+            $dadosPrestador = array(
+                'Prestador' => array(
+                    'nome' => $prestador['nome'],
+                    'sobrenome' => isset($prestador['sobrenome']) ? $prestador['sobrenome'] : '',
+                    'email' => $prestador['email'],
+                    'telefone' => isset($prestador['telefone']) ? $prestador['telefone'] : ''
+                )
+            );
+            
+            // Salvar prestador
+            $this->Prestador->create();
+            if ($this->Prestador->save($dadosPrestador)) {
+                $sucessos++;
+                
+                // Se tiver serviços, associar
+                if (!empty($prestador['servicos']) && !empty($prestador['valores'])) {
+                    $this->_associarServicosImportacao(
+                        $this->Prestador->id, 
+                        $prestador['servicos'], 
+                        $prestador['valores']
+                    );
+                }
+            } else {
+                $erros++;
+                $mensagensErro[] = "Linha " . ($linha + 2) . ": Erro ao salvar prestador";
+            }
+        }
+        
+        // Mensagem de resultado
+        if ($sucessos > 0) {
+            $msg = "$sucessos prestador(es) importado(s) com sucesso!";
+            if ($erros > 0) {
+                $msg .= " $erros erro(s) encontrado(s).";
+            }
+            $this->Session->setFlash($msg, 'default', array('class' => 'alert alert-success'));
+        } else {
+            $this->Session->setFlash('Nenhum prestador foi importado. Verifique o arquivo.', 'default', array('class' => 'alert alert-error'));
+        }
+        
+        // Salvar erros em sessão para exibir
+        if (!empty($mensagensErro)) {
+            $this->Session->write('erros_importacao', $mensagensErro);
+        }
+        
+        return $this->redirect(array('action' => 'index'));
+    }
+    
+    /**
+     * _lerCSV - Lê arquivo CSV e retorna array de dados
+     * @param string $caminho - caminho do arquivo
+     * @return array
+     */
+    private function _lerCSV($caminho) {
+        $dados = array();
+        
+        if (($handle = fopen($caminho, 'r')) !== false) {
+            // Ler cabeçalho
+            $headers = fgetcsv($handle, 1000, ';');
+            
+            // Se não houver cabeçalho, tentar vírgula
+            if (count($headers) === 1) {
+                rewind($handle);
+                $headers = fgetcsv($handle, 1000, ',');
+            }
+            
+            // Normalizar cabeçalhos (remover BOM, espaços, acentos)
+            $headers = array_map(function($h) {
+                $h = trim($h);
+                $h = preg_replace('/^\xEF\xBB\xBF/', '', $h); // Remove BOM
+                $h = strtolower($h);
+                $h = $this->_removerAcentos($h);
+                return $h;
+            }, $headers);
+            
+            // Ler linhas
+            while (($row = fgetcsv($handle, 1000, ';')) !== false) {
+                // Se só tem 1 coluna, tentar vírgula
+                if (count($row) === 1) {
+                    $row = str_getcsv($row[0], ',');
+                }
+                
+                // Combinar cabeçalhos com dados
+                if (count($row) === count($headers)) {
+                    $linha = array_combine($headers, $row);
+                    
+                    // Processar serviços (se houver coluna 'servicos')
+                    if (isset($linha['servicos'])) {
+                        $linha['servicos'] = array_map('trim', explode('|', $linha['servicos']));
+                    }
+                    
+                    // Processar valores (se houver coluna 'valores')
+                    if (isset($linha['valores'])) {
+                        $linha['valores'] = array_map('trim', explode('|', $linha['valores']));
+                    }
+                    
+                    $dados[] = $linha;
+                }
+            }
+            
+            fclose($handle);
+        }
+        
+        return $dados;
+    }
+    
+    /**
+     * _associarServicosImportacao - Associa serviços ao prestador na importação
+     * @param int $prestadorId
+     * @param array $nomeServicos
+     * @param array $valores
+     */
+    private function _associarServicosImportacao($prestadorId, $nomeServicos, $valores) {
+        foreach ($nomeServicos as $index => $nomeServico) {
+            // Buscar serviço pelo nome
+            $servico = $this->Servico->find('first', array(
+                'conditions' => array('Servico.nome LIKE' => '%' . trim($nomeServico) . '%'),
+                'fields' => array('Servico.id')
+            ));
+            
+            if (!empty($servico)) {
+                $valor = isset($valores[$index]) ? $this->_limparValor($valores[$index]) : 0;
                 
                 $this->PrestadorServico->create();
                 $this->PrestadorServico->save(array(
                     'PrestadorServico' => array(
                         'prestador_id' => $prestadorId,
-                        'servico_id' => $servicoId,
+                        'servico_id' => $servico['Servico']['id'],
                         'valor' => $valor
                     )
                 ));
             }
         }
+    }
+    
+    /**
+     * _limparValor - Limpa valor monetário detectando formato BR ou US
+     * @param string $valor
+     * @return float
+     */
+    private function _limparValor($valor) {
+        // Remove R$ e espaços
+        $valor = str_replace(array('R$', ' '), '', $valor);
+        
+        // Verifica se tem vírgula (formato BR: 1.000,00)
+        if (strpos($valor, ',') !== false) {
+            $valor = str_replace('.', '', $valor); // Remove ponto de milhar
+            $valor = str_replace(',', '.', $valor); // Troca vírgula por ponto
+        } 
+        // Se NÃO tem vírgula, mas tem ponto (formato CSV/US: 1000.00),
+        // a gente não faz nada, pois o floatval já entende.
+        
+        return floatval($valor);
+    }
+    
+    /**
+     * _removerAcentos - Remove acentos de string
+     * @param string $string
+     * @return string
+     */
+    private function _removerAcentos($string) {
+        $acentos = array(
+            'á' => 'a', 'à' => 'a', 'ã' => 'a', 'â' => 'a', 'ä' => 'a',
+            'é' => 'e', 'è' => 'e', 'ê' => 'e', 'ë' => 'e',
+            'í' => 'i', 'ì' => 'i', 'î' => 'i', 'ï' => 'i',
+            'ó' => 'o', 'ò' => 'o', 'õ' => 'o', 'ô' => 'o', 'ö' => 'o',
+            'ú' => 'u', 'ù' => 'u', 'û' => 'u', 'ü' => 'u',
+            'ç' => 'c', 'ñ' => 'n'
+        );
+        return strtr($string, $acentos);
     }
 }

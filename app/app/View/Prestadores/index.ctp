@@ -14,10 +14,11 @@
             <svg class="search-icon icon-search" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
             </svg>
-            <?php echo $this->Form->create('Prestador', array(
+            <?php echo $this->Form->create(false, array(
                 'type' => 'get',
-                'url' => array('action' => 'index'),
-                'inputDefaults' => array('label' => false, 'div' => false)
+                'url' => array('controller' => 'prestadores', 'action' => 'index'),
+                'inputDefaults' => array('label' => false, 'div' => false),
+                'id' => 'prestadores-search-form'
             )); ?>
             <?php echo $this->Form->input('busca', array(
                 'type' => 'text',
@@ -27,17 +28,22 @@
             <?php echo $this->Form->end(); ?>
         </div>
         
+        <style>
+            .btn-add,
+            .btn-import {
+                text-decoration: none !important;
+            }
+        </style>
         <!-- Botões -->
         <div class="button-group">
-            <button class="btn-import" onclick="alert('Funcionalidade de importação será implementada!')">
-                <svg class="icon-upload" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path>
-                </svg>
-                Importar
-            </button>
+            <?php echo $this->Html->link(
+                '<svg class="icon-upload" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg> Importar',
+                array('action' => 'importar'),
+                array('class' => 'btn-import', 'escape' => false)
+            ); ?>
             
             <?php echo $this->Html->link(
-                '<svg class="icon-plus" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg> Add novo prestador',
+                '<svg class="icon-plus" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg> Adicionar novo prestador',
                 array('action' => 'add'),
                 array('class' => 'btn-add', 'escape' => false)
             ); ?>
@@ -53,16 +59,38 @@
         <table class="prestadores-table">
             <thead>
                 <tr>
+                    <th style="width: 40px;">
+                        <div class="checkbox-cell">
+                            <input type="checkbox" id="select-all-prestadores">
+                        </div>
+                    </th>
                     <th>Prestador</th>
                     <th>Telefone</th>
                     <th>Serviços</th>
                     <th>Valor</th>
-                    <th></th>
+                    <th class="actions-column">
+                        <button type="button" class="btn-delete-selected" id="btn-delete-selected">
+                            <svg class="icon-delete" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                            </svg>
+                        </button>
+                    </th>
                 </tr>
             </thead>
             <tbody>
                 <?php foreach ($prestadores as $prestador): ?>
-                    <tr>
+                    <?php $idPrestador = (int)$prestador['Prestador']['id']; ?>
+                    <tr data-prestador-id="<?php echo $idPrestador; ?>">
+                        <!-- Checkbox seleção -->
+                        <td class="checkbox-column">
+                            <div class="checkbox-cell">
+                                <input 
+                                    type="checkbox" 
+                                    class="checkbox-prestador" 
+                                    value="<?php echo $idPrestador; ?>">
+                            </div>
+                        </td>
+
                         <!-- Prestador (Nome + Email + Foto) -->
                         <td>
                             <div class="prestador-info">
@@ -96,22 +124,46 @@
                         <td class="servicos-list">
                             <?php 
                             if (!empty($prestador['ServicosComPreco'])) {
-                                $servicos = array();
-                                foreach ($prestador['ServicosComPreco'] as $ps) {
-                                    $servicos[] = h($ps['Servico']['nome']);
+                                $totalServicos = count($prestador['ServicosComPreco']);
+                                $primeiroServico = h($prestador['ServicosComPreco'][0]['Servico']['nome']);
+                                
+                                if ($totalServicos == 1) {
+                                    // Apenas 1 serviço
+                                    echo $primeiroServico;
+                                } else {
+                                    // Múltiplos serviços - mostrar primeiro + badge
+                                    echo $primeiroServico . ' ';
+                                    echo '<span class="badge-servicos" title="Ver todos os serviços" data-id="' . $prestador['Prestador']['id'] . '">+' . ($totalServicos - 1) . ' mais</span>';
+                                    
+                                    // Tooltip escondido com todos os serviços
+                                    echo '<div class="tooltip-servicos" id="tooltip-' . $prestador['Prestador']['id'] . '">';
+                                    echo '<div class="tooltip-title">Todos os serviços:</div>';
+                                    foreach ($prestador['ServicosComPreco'] as $ps) {
+                                        echo '<div class="tooltip-item" style="display: flex; justify-content: space-between; gap: 15px;">';
+                                        echo '<span>' . h($ps['Servico']['nome']) . '</span>';
+                                        echo '<span class="tooltip-valor">R$ ' . number_format($ps['PrestadorServico']['valor'], 2, ',', '.') . '</span>';
+                                        echo '</div>';
+                                    }
+                                    echo '</div>';
                                 }
-                                echo implode(', ', $servicos);
                             } else {
                                 echo '<span style="color: #98A2B3;">Nenhum serviço</span>';
                             }
                             ?>
                         </td>
                         
-                        <!-- Valor (primeiro serviço) -->
+                        <!-- Valor -->
                         <td class="valor">
                             <?php 
                             if (!empty($prestador['ServicosComPreco'])) {
-                                echo 'R$ ' . number_format($prestador['ServicosComPreco'][0]['PrestadorServico']['valor'], 2, ',', '.');
+                                $totalServicos = count($prestador['ServicosComPreco']);
+                                $primeiroValor = $prestador['ServicosComPreco'][0]['PrestadorServico']['valor'];
+                                
+                                echo 'R$ ' . number_format($primeiroValor, 2, ',', '.');
+                                
+                                if ($totalServicos > 1) {
+                                    echo ' <span style="color: #667085; font-size: 12px;">(' . $totalServicos . ' serviços)</span>';
+                                }
                             } else {
                                 echo '-';
                             }
@@ -119,19 +171,19 @@
                         </td>
                         
                         <!-- Ações -->
-                        <td>
+                        <td class="actions-column">
                             <div class="actions-cell">
                                 <!-- Editar -->
                                 <?php echo $this->Html->link(
                                     '<svg class="icon-edit" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>',
-                                    array('action' => 'edit', $prestador['Prestador']['id']),
+                                    array('controller' => 'prestadores', 'action' => 'edit', $prestador['Prestador']['id']),
                                     array('class' => 'btn-icon', 'escape' => false, 'title' => 'Editar')
                                 ); ?>
                                 
                                 <!-- Excluir -->
                                 <?php echo $this->Form->postLink(
                                     '<svg class="icon-delete" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>',
-                                    array('action' => 'delete', $prestador['Prestador']['id']),
+                                    array('controller' => 'prestadores', 'action' => 'delete', $prestador['Prestador']['id']),
                                     array('class' => 'btn-icon delete', 'escape' => false, 'title' => 'Excluir'),
                                     'Tem certeza que deseja excluir este prestador?'
                                 ); ?>
@@ -149,22 +201,283 @@
             </div>
             
             <div class="pagination-buttons">
-                <?php echo $this->Paginator->prev('Anterior', array(), null, array('class' => 'disabled')); ?>
-                <?php echo $this->Paginator->next('Próximo', array(), null, array('class' => 'disabled')); ?>
+                <?php if ($this->Paginator->hasPrev()): ?>
+                    <?php echo $this->Paginator->prev('Anterior'); ?>
+                <?php endif; ?>
+
+                <?php if ($this->Paginator->hasNext()): ?>
+                    <?php echo $this->Paginator->next('Próximo'); ?>
+                <?php endif; ?>
             </div>
         </div>
     <?php endif; ?>
 </div>
 
+<style>
+.badge-servicos {
+    display: inline-block;
+    padding: 2px 8px;
+    background: #F2F4F7;
+    color: #344054;
+    font-size: 12px;
+    font-weight: 500;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.badge-servicos:hover {
+    background: #7F56D9;
+    color: #ffffff;
+}
+
+.tooltip-servicos {
+    display: none;
+    position: absolute;
+    background: #ffffff;
+    border: 1px solid #EAECF0;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    padding: 12px;
+    min-width: 300px;
+    z-index: 1000;
+    margin-top: 8px;
+}
+
+.tooltip-servicos.show {
+    display: block;
+}
+
+.tooltip-title {
+    font-size: 12px;
+    font-weight: 600;
+    color: #344054;
+    margin-bottom: 8px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #EAECF0;
+}
+
+.tooltip-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 6px 0;
+    font-size: 13px;
+    color: #667085;
+}
+
+.tooltip-valor {
+    font-weight: 500;
+    color: #101828;
+}
+
+/* Coluna de ações (header + linhas) */
+.prestadores-table th.actions-column,
+.prestadores-table td.actions-column {
+    width: 72px;
+    text-align: right;
+    padding-right: 24px;
+}
+
+/* Botão de excluir selecionados (só ícone) */
+.btn-delete-selected {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    border-radius: 8px;
+    border: 1px solid #F97066;
+    background: #F97066;
+    color: #FFF;
+    cursor: pointer;
+    transition: opacity 0.2s, box-shadow 0.2s, background 0.2s, transform 0.1s;
+}
+
+.btn-delete-selected.disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    box-shadow: none;
+}
+
+.btn-delete-selected:not(.disabled):hover {
+    background: #F04438;
+    transform: translateY(-1px);
+}
+
+/* Checkbox alinhado */
+.checkbox-column {
+    width: 40px;
+}
+
+.checkbox-cell {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+}
+
+.checkbox-prestador,
+#select-all-prestadores {
+    width: 16px;
+    height: 16px;
+    margin: 0;
+    vertical-align: middle;
+}
+</style>
+
 <script>
-// Auto-submit do formulário de busca ao digitar (debounce)
 jQuery(document).ready(function($) {
+    /* ------------------- BUSCA ------------------- */
     var timer;
     $('input[name="busca"]').on('keyup', function() {
         clearTimeout(timer);
         timer = setTimeout(function() {
-            $('form').submit();
+            $('#prestadores-search-form').submit(); // só o form da busca
         }, 500);
+    });
+    
+    /* ------------------- TOOLTIP SERVIÇOS ------------------- */
+    $('.badge-servicos').on('click', function(e) {
+        e.stopPropagation();
+        const id = $(this).data('id');
+        const tooltip = $('#tooltip-' + id);
+        
+        // Fechar outros tooltips
+        $('.tooltip-servicos').removeClass('show');
+        
+        // Toggle deste tooltip
+        tooltip.toggleClass('show');
+        
+        // Posicionar próximo ao badge
+        const badgePos = $(this).offset();
+        tooltip.css({
+            top: badgePos.top + 25,
+            left: badgePos.left
+        });
+    });
+    
+    // Fechar tooltip ao clicar fora
+    $(document).on('click', function() {
+        $('.tooltip-servicos').removeClass('show');
+    });
+    
+    // Prevenir fechar ao clicar no tooltip
+    $('.tooltip-servicos').on('click', function(e) {
+        e.stopPropagation();
+    });
+
+    /* ------------------- SELEÇÃO MÚLTIPLA ------------------- */
+    const STORAGE_KEY = 'prestadores_selecionados';
+    
+    function loadSelectedIds() {
+        try {
+            const saved = localStorage.getItem(STORAGE_KEY);
+            return saved ? JSON.parse(saved) : [];
+        } catch (e) {
+            return [];
+        }
+    }
+
+    function saveSelectedIds(ids) {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(ids));
+    }
+
+    function updateUIFromSelection() {
+        const selectedIds = loadSelectedIds();
+        let countOnPage = 0;
+        let totalCheckboxes = 0;
+
+        $('.checkbox-prestador').each(function() {
+            const id = parseInt($(this).val(), 10);
+            totalCheckboxes++;
+            if (selectedIds.indexOf(id) !== -1) {
+                $(this).prop('checked', true);
+                countOnPage++;
+            } else {
+                $(this).prop('checked', false);
+            }
+        });
+
+        // Atualiza "selecionar todos" da página
+        if (totalCheckboxes > 0 && countOnPage === totalCheckboxes) {
+            $('#select-all-prestadores').prop('checked', true);
+        } else {
+            $('#select-all-prestadores').prop('checked', false);
+        }
+
+        // Apenas muda o estilo do botão (continua clicável para mostrar alerta)
+        if (selectedIds.length === 0) {
+            $('#btn-delete-selected').addClass('disabled');
+        } else {
+            $('#btn-delete-selected').removeClass('disabled');
+        }
+    }
+
+    function toggleIdInSelection(id, checked) {
+        const ids = loadSelectedIds();
+        const index = ids.indexOf(id);
+        if (checked && index === -1) {
+            ids.push(id);
+        }
+        if (!checked && index !== -1) {
+            ids.splice(index, 1);
+        }
+        saveSelectedIds(ids);
+        updateUIFromSelection();
+    }
+
+    // Inicializa estado dos checkboxes ao carregar a página
+    updateUIFromSelection();
+
+    // Clique em checkboxes individuais
+    $(document).on('change', '.checkbox-prestador', function() {
+        const id = parseInt($(this).val(), 10);
+        toggleIdInSelection(id, $(this).is(':checked'));
+    });
+
+    // Selecionar todos da página atual
+    $('#select-all-prestadores').on('change', function() {
+        const checked = $(this).is(':checked');
+        $('.checkbox-prestador').each(function() {
+            const id = parseInt($(this).val(), 10);
+            $(this).prop('checked', checked);
+            toggleIdInSelection(id, checked);
+        });
+    });
+
+    // Botão de excluir selecionados
+    $('#btn-delete-selected').on('click', function() {
+        const ids = loadSelectedIds();
+        
+        if (!ids.length) {
+            alert('Nenhum prestador selecionado.');
+            return;
+        }
+
+        if (!confirm('Tem certeza que deseja excluir os prestadores selecionados?')) {
+            return;
+        }
+
+        // Limpa seleção salva antes de enviar
+        localStorage.removeItem(STORAGE_KEY);
+
+        // Cria form dinâmico para envio por POST
+        const form = $('<form>', {
+            method: 'post',
+            action: '<?php echo $this->Html->url(array("controller" => "prestadores", "action" => "deleteSelected")); ?>'
+        });
+
+        for (let i = 0; i < ids.length; i++) {
+            form.append($('<input>', {
+                type: 'hidden',
+                name: 'ids[]',
+                value: ids[i]
+            }));
+        }
+
+        $('body').append(form);
+        form.submit();
     });
 });
 </script>
