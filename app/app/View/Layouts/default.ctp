@@ -15,7 +15,9 @@
     <?php echo $this->fetch('css'); ?>
     <?php echo $this->fetch('script'); ?>
 </head>
-<body style="background-color: #8f9196ff;">
+<body style="background-color: #e5e7eb;">
+
+
     <div id="container">
         <div id="content">
             <?php echo $this->Session->flash(); ?>

@@ -21,9 +21,9 @@ body {
     max-width: 1200px;
     margin: 40px auto;
     background: #ffffff;
-    border-radius: 12px;
+    border-radius: 16px;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    overflow: hidden;
+    overflow: visible;
 }
 
 /* ============================================
@@ -454,16 +454,123 @@ body {
     border: 2px solid #EAECF0;
 }
 
-/* Serviços (Checkboxes) */
-.servicos-grid {
-    display: grid;
+/* Serviços (seleção e lista) */
+.servicos-select-row {
+    display: flex;
     gap: 12px;
+    align-items: center;
     margin-top: 16px;
+    margin-bottom: 12px;
+}
+
+.servicos-select-wrapper {
+    position: relative;
+    flex: 1;
+}
+
+.servicos-select {
+    width: 100%;
+    border: 1px solid #D0D5DD;
+    border-radius: 8px;
+    padding: 10px 40px 10px 14px;
+    font-size: 14px;
+    color: #101828;
+    background: #ffffff;
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    position: relative;
+}
+
+.servicos-select-placeholder {
+    color: #667085;
+}
+
+.servicos-select-tags {
+    flex: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.servicos-select-caret {
+    position: absolute;
+    right: 14px;
+    font-size: 12px;
+    color: #667085;
+}
+
+.servicos-select.has-selection .servicos-select-placeholder {
+    display: none;
+}
+
+.servicos-select.has-selection .servicos-select-tags {
+    color: #101828;
+}
+
+.servicos-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    margin-top: 4px;
+    background: #ffffff;
+    border: 1px solid #EAECF0;
+    border-radius: 8px;
+    box-shadow: 0 12px 30px rgba(15, 23, 42, 0.16);
+    padding: 0;
+    display: none;
+    z-index: 50;
+}
+
+.servicos-dropdown.open {
+    display: block;
+}
+
+.servicos-dropdown-search {
+    width: 100%;
+    border: none;
+    border-bottom: 1px solid #EAECF0;
+    padding: 8px 14px;
+    outline: none;
+    font-size: 14px;
+}
+
+.servicos-dropdown-list {
+    max-height: 220px;
+    overflow-y: auto;
+}
+
+.servicos-dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 14px;
+    font-size: 14px;
+    color: #344054;
+    cursor: pointer;
+}
+
+.servicos-dropdown-item:hover {
+    background: #F9FAFB;
+}
+
+.servicos-dropdown-item input {
+    margin: 0;
+}
+
+/* Lista de serviços selecionados */
+.servicos-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-top: 8px;
 }
 
 .servico-item {
     display: flex;
     align-items: center;
+    justify-content: space-between;
     gap: 12px;
     padding: 12px 16px;
     border: 1px solid #EAECF0;
@@ -475,12 +582,6 @@ body {
     background: #F9FAFB;
 }
 
-.servico-item input[type="checkbox"] {
-    width: 20px;
-    height: 20px;
-    cursor: pointer;
-}
-
 .servico-nome {
     flex: 1;
     font-size: 14px;
@@ -489,15 +590,40 @@ body {
 }
 
 .servico-valor-input {
-    width: 150px;
+    width: 180px;
 }
 
 .servico-valor-input input {
+    width: 100%;
     padding: 8px 12px;
     border: 1px solid #D0D5DD;
     border-radius: 6px;
     font-size: 14px;
 }
+
+/* Botão vermelho ao lado do select */
+.btn-add-servico-inline {
+    padding: 10px 16px;
+    background: #EF4444;
+    border: none;
+    border-radius: 8px;
+    color: #ffffff;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    white-space: nowrap;
+    transition: all 0.2s;
+}
+
+.btn-add-servico-inline:hover {
+    background: #DC2626;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+}
+
 
 /* Botão Cadastrar Serviço */
 .btn-add-servico {
