@@ -118,10 +118,28 @@
                         <input type="text" id="servicos-search" class="servicos-dropdown-search" placeholder="Buscar serviço...">
                         <div class="servicos-dropdown-list">
                             <?php foreach ($servicos as $id => $nome): ?>
-                                <label class="servicos-dropdown-item" data-nome="<?php echo h(mb_strtolower($nome, 'UTF-8')); ?>">
-                                    <input type="checkbox" class="servico-option" data-id="<?php echo $id; ?>">
-                                    <span><?php echo h($nome); ?></span>
-                                </label>
+                                <div class="servicos-dropdown-item"
+                                    data-servico-id="<?php echo $id; ?>"
+                                    data-nome="<?php echo h(mb_strtolower($nome, 'UTF-8')); ?>">
+
+                                    <label class="servicos-dropdown-label">
+                                        <input type="checkbox"
+                                            class="servico-option"
+                                            data-id="<?php echo $id; ?>">
+                                        <span class="servicos-dropdown-name">
+                                            <?php echo h($nome); ?>
+                                        </span>
+                                    </label>
+                                    <button type="button"
+                                        class="servico-more-btn"
+                                        onclick="abrirModalServicoAcoesDoBotao(<?php echo (int)$id; ?>, '<?php echo h(addslashes($nome)); ?>')">
+                                    <svg class="icon-more" viewBox="0 0 20 20" fill="none">
+                                        <circle cx="4" cy="10" r="1.5"></circle>
+                                        <circle cx="10" cy="10" r="1.5"></circle>
+                                        <circle cx="16" cy="10" r="1.5"></circle>
+                                    </svg>
+                                </button>
+                                </div>
                             <?php endforeach; ?>
                         </div>
                     </div>
@@ -174,6 +192,7 @@
 
 <!-- Modal Cadastrar Serviço -->
 <?php echo $this->element('modal_servico'); ?>
+<?php echo $this->element('modal_servico_acoes'); ?>
 
 <script>
 jQuery(function($) {
@@ -215,29 +234,19 @@ jQuery(function($) {
         const dd = $dropdown[0];
         if (!dd) return;
 
-        // Altura "ideal" da lista (cabe ~5–6 serviços)
         const ALTURA_BASE = 220;
-        const MARGEM_TELA = 80; // margem de respiro em relação ao viewport
-
-        // Altura baseada APENAS na altura da tela, não na posição do select
+        const MARGEM_TELA = 80;
         const alturaMaxTela = window.innerHeight - MARGEM_TELA;
         const altura = Math.max(140, Math.min(ALTURA_BASE, alturaMaxTela));
 
-        // Aplica a altura calculada SEM depender da posição
         $dropdown.find('.servicos-dropdown-list').css('max-height', altura + 'px');
 
-        // --- Scroll da página pra garantir que o dropdown apareça inteiro ---
         const rect = dd.getBoundingClientRect();
-        const dropdownBottom = window.scrollY + rect.top + altura + 24; // folga de 24px
+        const dropdownBottom = window.scrollY + rect.top + altura + 24;
         const alvoScroll = Math.max(0, dropdownBottom - window.innerHeight);
 
-        jQuery('html, body').stop().animate(
-            { scrollTop: alvoScroll },
-            200
-        );
+        jQuery('html, body').stop().animate({ scrollTop: alvoScroll }, 200);
     }
-
-
 
     function syncRow(id, checked) {
         const $row = $('#servico-item-' + id);
@@ -267,9 +276,7 @@ jQuery(function($) {
             $trigger.addClass('has-selection');
             $placeholder.hide();
             if (count === 1) {
-                $tags.text(
-                    $options.first().closest('.servicos-dropdown-item').find('span').text()
-                );
+                $tags.text($options.first().closest('.servicos-dropdown-item').find('.servicos-dropdown-name').text());
             } else {
                 $tags.text(count + ' serviços selecionados');
             }
@@ -291,8 +298,6 @@ jQuery(function($) {
             $search.val('');
             filterList('');
             $search.focus();
-
-            // ajusta a altura de acordo com o espaço da tela
             setTimeout(ajustarAlturaDropdown, 0);
         }
     });
@@ -318,114 +323,88 @@ jQuery(function($) {
     updateTags();
 
     /* -------- Máscara de valor -------- */
+    function aplicarMascaraValor($input) {
+        $input.on('input', function(e) {
+            let value = e.target.value.replace(/\D/g, '');
+            if (value) {
+                value = (parseFloat(value) / 100).toFixed(2);
+                value = value.replace('.', ',');
+                value = value.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+                e.target.value = 'R$ ' + value;
+            }
+        });
+
+        $input.on('blur', function(e) {
+            let value = e.target.value.replace(/\D/g, '');
+            if (value) {
+                value = (parseFloat(value) / 100).toFixed(2);
+                e.target.value = value;
+            }
+        });
+
+        $input.on('focus', function(e) {
+            let value = e.target.value.replace(/\D/g, '');
+            if (value) {
+                value = (parseFloat(value) / 100).toFixed(2);
+                value = value.replace('.', ',');
+                value = value.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+                e.target.value = 'R$ ' + value;
+            }
+        });
+    }
+
     $('.valor-input').each(function() {
-        $(this).on('input', function(e) {
-            let value = e.target.value.replace(/\D/g, '');
-            if (value) {
-                value = (parseFloat(value) / 100).toFixed(2);
-                value = value.replace('.', ',');
-                value = value.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
-                e.target.value = 'R$ ' + value;
-            }
-        });
-
-        $(this).on('blur', function(e) {
-            let value = e.target.value.replace(/\D/g, '');
-            if (value) {
-                value = (parseFloat(value) / 100).toFixed(2);
-                e.target.value = value; // número puro para o backend
-            }
-        });
-
-        $(this).on('focus', function(e) {
-            let value = e.target.value.replace(/\D/g, '');
-            if (value) {
-                value = (parseFloat(value) / 100).toFixed(2);
-                value = value.replace('.', ',');
-                value = value.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
-                e.target.value = 'R$ ' + value;
-            }
-        });
+        aplicarMascaraValor($(this));
     });
 
-    /* -------- Modal de novo serviço (mantido igual) -------- */
-    window.abrirModalServico = function() {
-        $('#modal-servico').css('display', 'flex');
-    };
-
-    window.fecharModalServico = function() {
-        $('#modal-servico').hide();
-        $('#novo-servico-nome').val('');
-        $('#novo-servico-descricao').val('');
-    };
-
-    window.salvarNovoServico = function() {
-        const nome = $('#novo-servico-nome').val();
-        const descricao = $('#novo-servico-descricao').val();
-
-        if (!nome) {
-            alert('Por favor, preencha o nome do serviço.');
-            return;
-        }
-
-        alert('Funcionalidade de cadastro de serviço será implementada via AJAX.');
-        window.fecharModalServico();
-    };
-
-    $('#modal-servico').on('click', function(e) {
-        if (e.target === this) {
-            window.fecharModalServico();
-        }
-    });
-
-    // Debug opcional
-    $('#PrestadorAddForm').on('submit', function() {
-        console.log('=== DADOS DO FORMULÁRIO ===');
-        $('.servico-item:visible').each(function() {
-            const id = $(this).data('servico-id');
-            console.log('Serviço ID:', id, 'Valor:', $(this).find('.valor-input').val());
-        });
-    });
-    // Callback quando novo serviço é cadastrado
+    /* -------- Callback quando novo serviço é cadastrado -------- */
     window.onNovoServicoCadastrado = function(servico) {
         console.log('Novo serviço cadastrado:', servico);
-        
-        // Adicionar no dropdown
-        const $dropdown = $('.servicos-dropdown-list');
-        const novaOpcao = $('<label>', {
-            class: 'servicos-dropdown-item',
+
+        const $lista = $('.servicos-dropdown-list');
+        const $item = $('<div>', {
+            'class': 'servicos-dropdown-item',
+            'data-servico-id': servico.id,
             'data-nome': servico.nome.toLowerCase()
-        }).append(
-            $('<input>', {
-                type: 'checkbox',
-                class: 'servico-option',
-                'data-id': servico.id
-            })
-        ).append(
-            $('<span>').text(servico.nome)
-        );
-        
-        $dropdown.append(novaOpcao);
-        
-        // Adicionar item na grid (escondido)
-        const novoItem = $('<div>', {
-            class: 'servico-item',
+        });
+
+        const $label = $('<label>', { 'class': 'servicos-dropdown-label' });
+        const $checkbox = $('<input>', {
+            type: 'checkbox',
+            'class': 'servico-option',
+            'data-id': servico.id
+        });
+        const $nameSpan = $('<span>', { 'class': 'servicos-dropdown-name' }).text(servico.nome);
+
+        $label.append($checkbox).append($nameSpan);
+
+        const $moreBtn = $('<button>', {
+            type: 'button',
+            'class': 'servico-more-btn',
+            click: function() {
+                abrirModalServicoAcoesDoBotao(servico.id, servico.nome);
+            }
+        }).html('<svg class="icon-more" viewBox="0 0 20 20" fill="none"><circle cx="4" cy="10" r="1.5"></circle><circle cx="10" cy="10" r="1.5"></circle><circle cx="16" cy="10" r="1.5"></circle></svg>');
+
+        $item.append($label).append($moreBtn);
+        $lista.append($item);
+
+        const $novoItemGrid = $('<div>', {
+            'class': 'servico-item',
             id: 'servico-item-' + servico.id,
             'data-servico-id': servico.id,
             style: 'display:none;'
         }).append(
-            $('<span>', {class: 'servico-nome'}).text(servico.nome)
-        ).append(
-            $('<div>', {class: 'servico-valor-input'}).append(
+            $('<span>', { 'class': 'servico-nome' }).text(servico.nome),
+            $('<div>', { 'class': 'servico-valor-input' }).append(
                 $('<input>', {
                     type: 'text',
                     name: 'data[Servicos][' + servico.id + '][valor]',
                     id: 'valor_' + servico.id,
                     placeholder: 'R$ 0,00',
-                    class: 'valor-input'
+                    'class': 'valor-input'
                 })
-            )
-        ).append(
+            ),
             $('<input>', {
                 type: 'hidden',
                 name: 'data[Servicos][' + servico.id + '][checked]',
@@ -433,47 +412,143 @@ jQuery(function($) {
                 value: ''
             })
         );
-        
-        $('#servicos-selecionados').append(novoItem);
-        
-        // Aplicar máscara no novo input
-        novoItem.find('.valor-input').each(function() {
-            $(this).on('input', function(e) {
-                let value = e.target.value.replace(/\D/g, '');
-                if (value) {
-                    value = (parseFloat(value) / 100).toFixed(2);
-                    value = value.replace('.', ',');
-                    value = value.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
-                    e.target.value = 'R$ ' + value;
-                }
-            });
-            $(this).on('blur', function(e) {
-                let value = e.target.value.replace(/\D/g, '');
-                if (value) {
-                    value = (parseFloat(value) / 100).toFixed(2);
-                    e.target.value = value;
-                }
-            });
-            $(this).on('focus', function(e) {
-                let value = e.target.value.replace(/\D/g, '');
-                if (value) {
-                    value = (parseFloat(value) / 100).toFixed(2);
-                    value = value.replace('.', ',');
-                    value = value.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
-                    e.target.value = 'R$ ' + value;
-                }
-            });
-        });
-        
-        // Bind evento no novo checkbox
-        novaOpcao.find('.servico-option').on('change', function() {
+
+        $('#servicos-selecionados').append($novoItemGrid);
+
+        aplicarMascaraValor($novoItemGrid.find('.valor-input'));
+
+        $checkbox.on('change', function() {
             const id = $(this).data('id');
             syncRow(id, $(this).is(':checked'));
             updateTags();
         });
-        
-        // Mostrar alerta de sucesso
+
         alert('Serviço "' + servico.nome + '" cadastrado com sucesso! Agora você pode selecioná-lo.');
     };
+
+    /* -------- Modal de ações de serviço -------- */
+    window.abrirModalServicoAcoes = function() {
+        $('#modal-servico-acoes').css('display', 'flex').attr('data-open', '1');
+    };
+
+    window.abrirModalServicoAcoesDoBotao = function(id, nome) {
+        console.log('[Modal Ações] ID:', id, 'Nome:', nome);
+
+        if (!id) {
+            alert('Serviço inválido.');
+            return;
+        }
+
+        $('#modal-servico-acoes-titulo').text(nome || 'Serviço');
+        $('#modal-servico-acoes').data('servico-id', id);
+        abrirModalServicoAcoes();
+
+        $('#servico-acoes-nome').val('');
+        $('#servico-acoes-descricao').val('Carregando...');
+
+        $.ajax({
+            url: '<?php echo $this->Html->url(array("controller" => "prestadores", "action" => "detalhes_servico")); ?>/' + id,
+            type: 'GET',
+            dataType: 'json',
+            success: function(resp) {
+                if (!resp || !resp.success) {
+                    fecharModalServicoAcoes();
+                    alert(resp && resp.message ? resp.message : 'Erro ao carregar serviço.');
+                    return;
+                }
+
+                $('#servico-acoes-nome').val(resp.servico.nome || '');
+                $('#servico-acoes-descricao').val(resp.servico.descricao || '');
+            },
+            error: function() {
+                fecharModalServicoAcoes();
+                alert('Erro ao carregar os dados do serviço.');
+            }
+        });
+    };
+
+    window.fecharModalServicoAcoes = function() {
+        $('#modal-servico-acoes')
+            .css('display', 'none')
+            .attr('data-open', '0')
+            .removeData('servico-id');
+        $('#servico-acoes-nome').val('');
+        $('#servico-acoes-descricao').val('');
+    };
+
+    /* -------- Salvar alterações do serviço -------- */
+    $('#btn-salvar-servico-edicao').on('click', function() {
+        const id = $('#modal-servico-acoes').data('servico-id');
+        const nome = $('#servico-acoes-nome').val().trim();
+        const desc = $('#servico-acoes-descricao').val().trim();
+
+        if (!id) {
+            alert('Serviço inválido.');
+            return;
+        }
+        if (!nome) {
+            alert('O nome do serviço é obrigatório.');
+            return;
+        }
+
+        $.ajax({
+            url: '<?php echo $this->Html->url(array("controller" => "prestadores", "action" => "atualizar_servico")); ?>',
+            type: 'POST',
+            dataType: 'json',
+            data: { id: id, nome: nome, descricao: desc },
+            success: function(resp) {
+                if (!resp.success) {
+                    alert(resp.message || 'Erro ao salvar o serviço.');
+                    return;
+                }
+
+                // Atualiza nome em todos os lugares
+                $('.servicos-dropdown-item[data-servico-id="' + id + '"] .servicos-dropdown-name').text(nome);
+                $('#servico-item-' + id + ' .servico-nome').text(nome);
+
+                alert('Serviço atualizado com sucesso!');
+                fecharModalServicoAcoes();
+            },
+            error: function() {
+                alert('Erro ao salvar o serviço.');
+            }
+        });
+    });
+
+    /* -------- Excluir serviço -------- */
+    $('#btn-excluir-servico').on('click', function() {
+        const id = $('#modal-servico-acoes').data('servico-id');
+
+        if (!id) {
+            alert('Serviço inválido.');
+            return;
+        }
+
+        if (!confirm('Tem certeza que deseja excluir este serviço? Essa ação não poderá ser desfeita.')) {
+            return;
+        }
+
+        $.ajax({
+            url: '<?php echo $this->Html->url(array("controller" => "prestadores", "action" => "excluir_servico")); ?>/' + id,
+            type: 'POST',
+            dataType: 'json',
+            success: function(resp) {
+                if (!resp.success) {
+                    alert(resp.message || 'Erro ao excluir o serviço.');
+                    return;
+                }
+
+                $('.servicos-dropdown-item[data-servico-id="' + id + '"]').remove();
+                $('#servico-item-' + id).remove();
+                updateTags();
+
+                alert('Serviço excluído com sucesso!');
+                fecharModalServicoAcoes();
+            },
+            error: function() {
+                alert('Erro ao excluir o serviço.');
+            }
+        });
+    });
 });
 </script>
