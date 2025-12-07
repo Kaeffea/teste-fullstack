@@ -71,7 +71,7 @@ O banco já está configurado automaticamente via Docker com:
 
 **Executar migrations/seed:**
 ```bash
-docker exec -it cakephp_db mysql -uroot -proot teste_joao < app/Config/Schema/schema.sql
+docker exec -i cakephp_db mysql -uroot -proot --default-character-set=utf8 teste_joao < app/app/Config/Schema/schema.sql
 ```
 
 Ou acessar phpMyAdmin (http://localhost:8081) e importar `app/Config/Schema/schema.sql`
