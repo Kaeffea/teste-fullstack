@@ -2,7 +2,7 @@
 App::uses('AppController', 'Controller');
 
 /**
- * Controller de Prestadores
+ * Controller de Prestadores (PrestadoresController.php)
  * Gerencia CRUD completo de prestadores de serviço
  */
 class PrestadoresController extends AppController {
@@ -598,5 +598,75 @@ class PrestadoresController extends AppController {
             'ç' => 'c', 'ñ' => 'n'
         );
         return strtr($string, $acentos);
+    }
+
+    /**
+     * cadastrar_servico - Cadastra novo serviço via AJAX
+     * POST /prestadores/cadastrar_servico
+     */
+    public function cadastrar_servico() {
+        // Configurar para retornar JSON
+        $this->autoRender = false;
+        $this->response->type('json');
+        
+        if (!$this->request->is('ajax') || !$this->request->is('post')) {
+            echo json_encode(array(
+                'success' => false,
+                'message' => 'Requisição inválida'
+            ));
+            return;
+        }
+        
+        $nome = trim($this->request->data['nome']);
+        $descricao = trim($this->request->data['descricao']);
+        
+        // Validar nome
+        if (empty($nome)) {
+            echo json_encode(array(
+                'success' => false,
+                'message' => 'O nome do serviço é obrigatório'
+            ));
+            return;
+        }
+        
+        // Verificar se já existe
+        $existe = $this->Servico->find('count', array(
+            'conditions' => array('Servico.nome' => $nome)
+        ));
+        
+        if ($existe > 0) {
+            echo json_encode(array(
+                'success' => false,
+                'message' => 'Já existe um serviço com este nome'
+            ));
+            return;
+        }
+        
+        // Salvar serviço
+        $this->Servico->create();
+        $dados = array(
+            'Servico' => array(
+                'nome' => $nome,
+                'descricao' => $descricao
+            )
+        );
+        
+        if ($this->Servico->save($dados)) {
+            $novoServico = array(
+                'id' => $this->Servico->id,
+                'nome' => $nome
+            );
+            
+            echo json_encode(array(
+                'success' => true,
+                'message' => 'Serviço cadastrado com sucesso!',
+                'servico' => $novoServico
+            ));
+        } else {
+            echo json_encode(array(
+                'success' => false,
+                'message' => 'Erro ao cadastrar serviço'
+            ));
+        }
     }
 }
