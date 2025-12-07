@@ -112,8 +112,8 @@ Maria;Santos;maria@email.com;(82) 99604-9203;Hidráulica;180.00</pre>
                 </svg>
             </div>
             
-            <h3 class="modal-title">Lista enviada com sucesso!</h3>
-            <p class="modal-subtitle">Confira seus servidores na tabela abaixo</p>
+            <h3 class="modal-title" style="font-size: 20px; font-weight: 600; color: #101828; margin-bottom: 8px;">Lista enviada com sucesso!</h3>
+            <p class="modal-subtitle" style="font-size: 14px; color: #667085;">Confira seus prestadores na tabela abaixo</p>
             
             <div style="margin-top: 24px;">
                 <button type="button" class="btn-submit" onclick="window.location.href='<?php echo $this->Html->url(array('action' => 'index')); ?>'">
@@ -129,7 +129,6 @@ Maria;Santos;maria@email.com;(82) 99604-9203;Hidráulica;180.00</pre>
 document.getElementById('csv-input').addEventListener('change', function(e) {
     const file = e.target.files[0];
     if (file) {
-        // Mostrar info do arquivo
         document.getElementById('file-name').textContent = file.name;
         document.getElementById('file-size').textContent = formatarTamanho(file.size);
         document.getElementById('file-info').style.display = 'block';
@@ -169,19 +168,16 @@ uploadArea.addEventListener('drop', function(e) {
     }
 });
 
-// Remover arquivo
 function removerArquivo() {
     document.getElementById('csv-input').value = '';
     document.getElementById('file-info').style.display = 'none';
     document.getElementById('btn-importar').disabled = true;
 }
 
-// Iniciar importação com animação
 function iniciarImportacao() {
     document.getElementById('progress-bar').style.display = 'block';
     document.getElementById('btn-importar').disabled = true;
     
-    // Simular progresso
     let progress = 0;
     const interval = setInterval(function() {
         progress += 10;
@@ -190,13 +186,11 @@ function iniciarImportacao() {
         
         if (progress >= 100) {
             clearInterval(interval);
-            // Submeter formulário
             document.getElementById('form-importacao').submit();
         }
     }, 100);
 }
 
-// Formatar tamanho do arquivo
 function formatarTamanho(bytes) {
     if (bytes === 0) return '0 Bytes';
     const k = 1024;
@@ -204,14 +198,5 @@ function formatarTamanho(bytes) {
     const i = Math.floor(Math.log(bytes) / Math.log(k));
     return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
 }
-
-// Mostrar modal de sucesso se houver mensagem
-<?php if ($this->Session->check('Message.flash')): ?>
-    setTimeout(function() {
-        const flash = document.querySelector('.alert-success');
-        if (flash) {
-            document.getElementById('modal-sucesso').style.display = 'flex';
-        }
-    }, 500);
-<?php endif; ?>
 </script>
+

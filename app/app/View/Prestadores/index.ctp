@@ -7,6 +7,148 @@
         <h1 class="page-title">Prestadores de Serviço</h1>
         <p class="page-subtitle">Veja sua lista de prestadores de serviço</p>
     </div>
+
+<!-- Mensagens de Importação -->
+<?php if ($this->Session->check('importacao_sucesso')): ?>
+    <?php
+        $temErros  = $this->Session->check('erros_importacao');
+        $temAvisos = $this->Session->check('avisos_importacao');
+
+        // Estados possíveis:
+        // - sucesso_total      = sem erros e sem avisos
+        // - sucesso_com_avisos = sem erros, mas com avisos  ✅ continua verde
+        // - parcial            = teve sucesso, mas também teve erros 🟡
+        if ($temErros) {
+            $estado = 'parcial';
+        } elseif ($temAvisos) {
+            $estado = 'sucesso_com_avisos';
+        } else {
+            $estado = 'sucesso_total';
+        }
+    ?>
+    
+    <!-- Modal de Sucesso / Parcial -->
+    <div id="modal-import-success" class="modal-overlay" style="display: flex;">
+        <div class="modal">
+            <div style="text-align: center;">
+
+                <?php if ($estado === 'parcial'): ?>
+                    <!-- Ícone amarelo (triângulo com !) – sucesso parcial (teve erros) -->
+                    <div style="width: 56px; height: 56px; margin: 0 auto 20px; background: #FFFBEB; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                        <svg width="28" height="28" fill="none" stroke="#B45309" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a1 1 0 00.86 1.5h18.64a1 1 0 00.86-1.5L13.71 3.86a1 1 0 00-1.72 0z"></path>
+                        </svg>
+                    </div>
+                    
+                    <h3 style="font-size: 20px; font-weight: 600; color: #92400E; margin-bottom: 8px;">
+                        Importação concluída com erros e avisos
+                    </h3>
+                    <p style="font-size: 14px; color: #B45309; margin-bottom: 24px;">
+                        Alguns prestadores não foram importados ou possuem dados incompletos. Veja os detalhes abaixo.
+                    </p>
+
+                <?php else: ?>
+                    <!-- Ícone verde (check) – sucesso total OU sucesso com avisos -->
+                    <div style="width: 56px; height: 56px; margin: 0 auto 20px; background: #ECFDF5; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                        <svg width="28" height="28" fill="none" stroke="#047857" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                        </svg>
+                    </div>
+                    
+                    <h3 style="font-size: 20px; font-weight: 600; color: #166534; margin-bottom: 8px;">
+                        <?php if ($estado === 'sucesso_com_avisos'): ?>
+                            Importação concluída com sucesso
+                        <?php else: ?>
+                            Lista enviada com sucesso!
+                        <?php endif; ?>
+                    </h3>
+                    <p style="font-size: 14px; color: #4B5563; margin-bottom: 24px;">
+                        <?php if ($estado === 'sucesso_com_avisos'): ?>
+                            Seu arquivo foi importado. Alguns itens geraram avisos informativos. Veja os detalhes abaixo.
+                        <?php else: ?>
+                            Confira seus prestadores na tabela abaixo.
+                        <?php endif; ?>
+                    </p>
+                <?php endif; ?>
+                
+                <?php if ($temErros || $temAvisos): ?>
+                    <div style="text-align: left; max-height: 200px; overflow-y: auto; background: #F9FAFB; padding: 12px; border-radius: 8px; margin-bottom: 20px;">
+                        <?php if ($temErros): ?>
+                            <p style="font-size: 13px; font-weight: 600; color: #DC2626; margin-bottom: 8px;">❌ Erros:</p>
+                            <ul style="font-size: 12px; color: #DC2626; margin: 0 0 12px 20px;">
+                                <?php foreach ($this->Session->read('erros_importacao') as $erro): ?>
+                                    <li><?php echo h($erro); ?></li>
+                                <?php endforeach; ?>
+                            </ul>
+                        <?php endif; ?>
+                        
+                        <?php if ($temAvisos): ?>
+                            <p style="font-size: 13px; font-weight: 600; color: #D97706; margin-bottom: 8px;">⚠️ Avisos:</p>
+                            <ul style="font-size: 12px; color: #D97706; margin: 0 0 0 20px;">
+                                <?php foreach ($this->Session->read('avisos_importacao') as $aviso): ?>
+                                    <li><?php echo h($aviso); ?></li>
+                                <?php endforeach; ?>
+                            </ul>
+                        <?php endif; ?>
+                    </div>
+                <?php endif; ?>
+                
+                <button type="button" class="btn-submit" onclick="fecharModalImportacao()">
+                    OK
+                </button>
+            </div>
+        </div>
+    </div>
+
+<?php elseif ($this->Session->check('erros_importacao') || $this->Session->check('avisos_importacao')): ?>
+
+    <!-- Modal de Erro na Importação (nenhum registro salvo) -->
+    <div id="modal-import-error" class="modal-overlay" style="display: flex;">
+        <div class="modal">
+            <div style="text-align: center;">
+                <div style="width: 56px; height: 56px; margin: 0 auto 20px; background: #FEF2F2; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                    <svg width="28" height="28" fill="none" stroke="#DC2626" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a1 1 0 00.86 1.5h18.64a1 1 0 00.86-1.5L13.71 3.86a1 1 0 00-1.72 0z"></path>
+                    </svg>
+                </div>
+                
+                <h3 style="font-size: 20px; font-weight: 600; color: #B91C1C; margin-bottom: 8px;">
+                    Não foi possível importar a lista
+                </h3>
+                <p style="font-size: 14px; color: #991B1B; margin-bottom: 24px;">
+                    Verifique os erros e avisos abaixo e ajuste o arquivo CSV para tentar novamente.
+                </p>
+
+                <div style="text-align: left; max-height: 260px; overflow-y: auto; background: #FEF2F2; padding: 12px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #FECACA;">
+                    <?php if ($this->Session->check('erros_importacao')): ?>
+                        <p style="font-size: 13px; font-weight: 600; color: #DC2626; margin-bottom: 8px;">❌ Erros:</p>
+                        <ul style="font-size: 12px; color: #B91C1C; margin: 0 0 12px 20px;">
+                            <?php foreach ($this->Session->read('erros_importacao') as $erro): ?>
+                                <li><?php echo h($erro); ?></li>
+                            <?php endforeach; ?>
+                        </ul>
+                    <?php endif; ?>
+
+                    <?php if ($this->Session->check('avisos_importacao')): ?>
+                        <p style="font-size: 13px; font-weight: 600; color: #D97706; margin-bottom: 8px;">⚠️ Avisos:</p>
+                        <ul style="font-size: 12px; color: #92400E; margin: 0 0 0 20px;">
+                            <?php foreach ($this->Session->read('avisos_importacao') as $aviso): ?>
+                                <li><?php echo h($aviso); ?></li>
+                            <?php endforeach; ?>
+                        </ul>
+                    <?php endif; ?>
+                </div>
+
+                <button type="button" class="btn-submit" onclick="fecharModalImportacaoErro()">
+                    Entendi
+                </button>
+            </div>
+        </div>
+    </div>
+
+<?php endif; ?>
+
+
     
     <!-- Actions Bar -->
     <div class="actions-bar">
@@ -481,4 +623,32 @@ jQuery(document).ready(function($) {
         form.submit();
     });
 });
+</script>
+
+<script>
+function fecharModalImportacao() {
+    var modal = document.getElementById('modal-import-success');
+    if (modal) {
+        modal.style.display = 'none';
+    }
+
+    // Limpar sessão de importação
+    jQuery.ajax({
+        url: '<?php echo $this->Html->url(array("controller" => "prestadores", "action" => "limpar_sessao_importacao")); ?>',
+        type: 'POST'
+    });
+}
+
+function fecharModalImportacaoErro() {
+    var modal = document.getElementById('modal-import-error');
+    if (modal) {
+        modal.style.display = 'none';
+    }
+
+    // Limpar sessão de importação
+    jQuery.ajax({
+        url: '<?php echo $this->Html->url(array("controller" => "prestadores", "action" => "limpar_sessao_importacao")); ?>',
+        type: 'POST'
+    });
+}
 </script>
