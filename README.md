@@ -189,7 +189,7 @@ rm -rf /var/www/html/app/tmp/cache/*
 
 ## 👤 Autor
 
-[SEU NOME]
+[Kauê Fortaleza Ferreira]
 - GitHub: [@Kaeffea](https://github.com/Kaeffea/)
 - LinkedIn: [Kauê Ferreira](https://www.linkedin.com/in/kau%C3%AA-ferreira-a67546215/)
 
