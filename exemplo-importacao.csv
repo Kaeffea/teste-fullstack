@@ -1,0 +1,57 @@
+nome;sobrenome;email;telefone;servicos;precos
+Ana;Silva;ana.silva@example.com;(11)98123-0001;Desenvolvimento Backend|SEO & Otimização;650|320
+Bruno;Souza;bruno.souza@example.com;(11)98123-0002;Design Gráfico;180
+Carla;Pereira;carla.pereira@example.com;(11)98123-0003;Infraestrutura & Redes|Manutenção de Sistemas;520|340
+Diego;Santos;diego.santos@example.com;(11)98123-0004;Arquitetura de Software;890
+Eduarda;Gomes;eduarda.gomes@example.com;(11)98123-0005;UX/UI Design|Criação de Landing Page|Design Gráfico;420|300|210
+Felipe;Machado;felipe.machado@example.com;(11)98123-0006;Manutenção de Sistemas;350
+Gabriela;Oliveira;gabriela.oliveira@example.com;(11)98123-0007;Consultoria Técnica;200
+Henrique;Cardoso;henrique.cardoso@example.com;(11)98123-0008;Desenvolvimento Frontend|UX/UI Design;450|380
+Isabela;Martins;isabela.martins@example.com;(11)98123-0009;Design Gráfico|SEO & Otimização;160|420
+João;Lima;joao.lima@example.com;(11)98123-0010;Desenvolvimento Backend;720
+Karen;Almeida;karen.almeida@example.com;(11)98123-0011;Consultoria Técnica|Arquitetura de Software;220|810
+Lucas;Barbosa;lucas.barbosa@example.com;(11)98123-0012;Criação de Landing Page;270
+Marina;Costa;marina.costa@example.com;(11)98123-0013;Desenvolvimento Frontend|Design Gráfico;380|190
+Nicolas;Ribeiro;nicolas.ribeiro@example.com;(11)98123-0014;Infraestrutura & Redes|SEO & Otimização;560|500
+Olívia;Fernandes;olivia.fernandes@example.com;(11)98123-0015;UX/UI Design;350
+Paulo;Araújo;paulo.araujo@example.com;(11)98123-0016;Manutenção de Sistemas|Consultoria Técnica;330|180
+Queila;Batista;queila.batista@example.com;(11)98123-0017;Criação de Landing Page;310
+Renato;Teixeira;renato.teixeira@example.com;(11)98123-0018;Desenvolvimento Backend|Infraestrutura & Redes|Arquitetura de Software;680|540|860
+Sara;Monteiro;sara.monteiro@example.com;(11)98123-0019;Design Gráfico|UX/UI Design;210|390
+Tiago;Rocha;tiago.rocha@example.com;(11)98123-0020;SEO & Otimização;500
+Ursula;Campos;ursula.campos@example.com;(11)98123-0021;Desenvolvimento Backend;700
+Vinícius;Freitas;vinicius.freitas@example.com;(11)98123-0022;Infraestrutura & Redes|Consultoria Técnica;560|240
+Wesley;Moraes;wesley.moraes@example.com;(11)98123-0023;Manutenção de Sistemas|Design Gráfico;320|190
+Xênia;Prado;xenia.prado@example.com;(11)98123-0024;UX/UI Design;400
+Yago;Pinto;yago.pinto@example.com;(11)98123-0025;Consultoria Técnica|Arquitetura de Software|SEO & Otimização;190|830|510
+Zélia;Torres;zelia.torres@example.com;(11)98123-0026;Criação de Landing Page|Design Gráfico;260|200
+Alfredo;Rezende;alfredo.rezende@example.com;(11)98123-0027;Infraestrutura & Redes;520
+Beatriz;Neves;beatriz.neves@example.com;(11)98123-0028;Desenvolvimento Frontend|SEO & Otimização;360|480
+Caio;Assis;caio.assis@example.com;(11)98123-0029;Design Gráfico;170
+Daniela;Castro;daniela.castro@example.com;(11)98123-0030;UX/UI Design|Criação de Landing Page|Manutenção de Sistemas;390|310|350
+Eduardo;Farias;eduardo.farias@example.com;(11)98123-0031;Arquitetura de Software;900
+Fernanda;Tavares;fernanda.tavares@example.com;(11)98123-0032;Consultoria Técnica;200
+Gustavo;Vasconcelos;gustavo.vasconcelos@example.com;(11)98123-0033;Desenvolvimento Backend|Infraestrutura & Redes;690|550
+Helena;Carneiro;helena.carneiro@example.com;(11)98123-0034;UX/UI Design;420
+Igor;Peixoto;igor.peixoto@example.com;(11)98123-0035;Criação de Landing Page;270
+Jéssica;Porto;jessica.porto@example.com;(11)98123-0036;SEO & Otimização|Design Gráfico;470|210
+Kaique;Serrano;kaique.serrano@example.com;(11)98123-0037;Manutenção de Sistemas|Consultoria Técnica;340|200
+Laura;Menezes;laura.menezes@example.com;(11)98123-0038;Criação de Landing Page|UX/UI Design;290|380
+Mateus;Santiago;mateus.santiago@example.com;(11)98123-0039;Desenvolvimento Backend;760
+Natália;Frota;natalia.frota@example.com;(11)98123-0040;Design Gráfico|Manutenção de Sistemas;180|360
+Otávio;Seixas;otavio.seixas@example.com;(11)98123-0041;Arquitetura de Software|Consultoria Técnica;820|230
+Priscila;Campelo;priscila.campelo@example.com;(11)98123-0042;SEO & Otimização;490
+Rafael;Ramos;rafael.ramos@example.com;(11)98123-0043;Infraestrutura & Redes;560
+Simone;Barreto;simone.barreto@example.com;(11)98123-0044;Design Gráfico|Criação de Landing Page;200|300
+Tales;Carvalho;tales.carvalho@example.com;(11)98123-0045;Desenvolvimento Backend;640
+Úrsula;Meireles;ursula.meireles@example.com;(11)98123-0046;Consultoria Técnica|UX/UI Design;260|410
+Victor;Galvão;victor.galvao@example.com;(11)98123-0047;SEO & Otimização|Infraestrutura & Redes;580|520
+William;Nóbrega;william.nobrega@example.com;(11)98123-0048;Arquitetura de Software;870
+Yara;Reis;yara.reis@example.com;(11)98123-0049;UX/UI Design;380
+Zeca;Cavalcante;zeca.cavalcante@example.com;(11)98123-0050;Design Gráfico;140
+André;Lopes;andre.lopes@example.com;(11)98123-0051;Manutenção de Sistemas|SEO & Otimização;330|460
+Bianca;Cordeiro;bianca.cordeiro@example.com;(11)98123-0052;Desenvolvimento Backend|UX/UI Design;720|410
+Cauã;Paiva;caua.paiva@example.com;(11)98123-0053;Consultoria Técnica;180
+Diana;Rocha;diana.rocha@example.com;(11)98123-0054;Infraestrutura & Redes|Criação de Landing Page;540|310
+Emanuel;Sales;emanuel.sales@example.com;(11)98123-0055;Arquitetura de Software;880
+Fabiana;Matos;fabiana.matos@example.com;(11)98123-0056;SEO & Otimização|Design Gráfico;430|190

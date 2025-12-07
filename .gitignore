@@ -1,0 +1,28 @@
+# CakePHP
+app/tmp/*
+!app/tmp/.gitkeep
+app/Config/database.php
+app/Config/core.php
+
+# Docker
+db_data/
+
+# Uploads
+app/webroot/files/uploads/*
+!app/webroot/files/uploads/.gitkeep
+
+# IDEs
+.vscode/
+.idea/
+*.sublime-*
+
+# OS
+.DS_Store
+Thumbs.db
+.cache
+
+# Logs
+*.log
+
+# Vendor (se usar Composer)
+vendor/
