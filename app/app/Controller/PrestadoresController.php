@@ -43,6 +43,7 @@ class PrestadoresController extends AppController {
         
         // Busca (se houver termo de busca)
         $conditions = array();
+        $busca = '';
         if (!empty($this->request->query['busca'])) {
             $busca = $this->request->query['busca'];
             $conditions['OR'] = array(
@@ -52,8 +53,13 @@ class PrestadoresController extends AppController {
             );
         }
         
+        // Aplicar condições na configuração do Paginator
+        if (!isset($this->Paginator->settings['Prestador'])) {
+            $this->Paginator->settings['Prestador'] = array();
+        }
+        $this->Paginator->settings['Prestador']['conditions'] = $conditions;
+        
         // Buscar prestadores com paginação
-        $this->Paginator->settings['conditions'] = $conditions;
         $prestadores = $this->Paginator->paginate('Prestador');
         
         // Para cada prestador, buscar os serviços com preço
@@ -68,19 +74,14 @@ class PrestadoresController extends AppController {
         
         // Enviar para a view
         $this->set('prestadores', $prestadores);
-        $this->set('busca', isset($busca) ? $busca : '');
+        $this->set('busca', $busca);
     }
     
-    /**
-     * add - Adicionar novo prestador
-     * GET /prestadores/add (exibe formulário)
-     * POST /prestadores/add (processa dados)
-     */
     public function add() {
         if ($this->request->is('post')) {
             $this->Prestador->create();
             
-            // Upload da foto
+            // Upload da foto (Mantenha seu código de upload aqui)
             if (!empty($this->request->data['Prestador']['foto']['name'])) {
                 $foto = $this->_uploadFoto($this->request->data['Prestador']['foto']);
                 if ($foto) {
@@ -92,7 +93,6 @@ class PrestadoresController extends AppController {
                 unset($this->request->data['Prestador']['foto']);
             }
             
-            // Salvar prestador
             if ($this->Prestador->save($this->request->data)) {
                 $prestadorId = $this->Prestador->id;
                 
@@ -225,6 +225,49 @@ class PrestadoresController extends AppController {
         
         return $this->redirect(array('action' => 'index'));
     }
+
+    /**
+     * deleteSelected - Excluir múltiplos prestadores
+     * POST /prestadores/deleteSelected
+     */
+    public function deleteSelected() {
+        if (!$this->request->is('post')) {
+            throw new MethodNotAllowedException();
+        }
+
+        $ids = array();
+        if (!empty($this->request->data['ids']) && is_array($this->request->data['ids'])) {
+            $ids = array_map('intval', $this->request->data['ids']);
+        }
+
+        if (empty($ids)) {
+            $this->Session->setFlash('Nenhum prestador selecionado para exclusão.', 'default', array('class' => 'alert alert-error'));
+            return $this->redirect(array('action' => 'index'));
+        }
+
+        // Busca todos os prestadores para poder apagar as fotos depois
+        $prestadores = $this->Prestador->find('all', array(
+            'conditions' => array('Prestador.id' => $ids),
+            'fields' => array('Prestador.id', 'Prestador.foto')
+        ));
+
+        // Exclui todos
+        $this->Prestador->deleteAll(
+            array('Prestador.id' => $ids),
+            true,   // cascade
+            true    // callbacks
+        );
+
+        // Deleta as fotos físicas
+        foreach ($prestadores as $p) {
+            if (!empty($p['Prestador']['foto'])) {
+                $this->_deletarFoto($p['Prestador']['foto']);
+            }
+        }
+
+        $this->Session->setFlash('Prestadores excluídos com sucesso!', 'default', array('class' => 'alert alert-success'));
+        return $this->redirect(array('action' => 'index'));
+    }
     
     /**
      * _uploadFoto - Processa upload de foto
@@ -281,28 +324,41 @@ class PrestadoresController extends AppController {
      */
     private function _salvarServicos($prestadorId, $servicos) {
         foreach ($servicos as $servicoId => $dados) {
-            if (!empty($dados['checked']) || !empty($dados['valor'])) {
+            // Verifica se o checkbox está marcado OU se tem valor preenchido
+            $checked = !empty($dados['checked']) || (isset($dados['checked']) && $dados['checked'] == '1');
+            
+            if ($checked && !empty($dados['valor'])) {
                 // Limpar valor (remover R$, pontos e trocar vírgula por ponto)
-                $valor = !empty($dados['valor']) ? $dados['valor'] : '0';
+                $valor = $dados['valor'];
                 
-                // Remover "R$", espaços, pontos (milhares)
-                $valor = str_replace('R$', '', $valor);
-                $valor = str_replace(' ', '', $valor);
-                $valor = str_replace('.', '', $valor);
-                // Trocar vírgula por ponto
-                $valor = str_replace(',', '.', $valor);
+                // Se já vier como número (ex: 200.00), não precisa limpar
+                if (!is_numeric($valor)) {
+                    $valor = preg_replace('/[^0-9.,]/', '', $valor);
+                    if (strpos($valor, ',') !== false) {
+                        $valor = str_replace('.', '', $valor); // Remove ponto de milhar
+                        $valor = str_replace(',', '.', $valor); // Troca vírgula decimal por ponto
+                    }
+                }
                 
                 // Converter para float
                 $valor = floatval($valor);
                 
-                $this->PrestadorServico->create();
-                $this->PrestadorServico->save(array(
-                    'PrestadorServico' => array(
-                        'prestador_id' => $prestadorId,
-                        'servico_id' => $servicoId,
-                        'valor' => $valor
-                    )
-                ));
+                // Só salvar se o valor for maior que zero
+                if ($valor > 0) {
+                    $this->PrestadorServico->create();
+                    $resultado = $this->PrestadorServico->save(array(
+                        'PrestadorServico' => array(
+                            'prestador_id' => $prestadorId,
+                            'servico_id' => $servicoId,
+                            'valor' => $valor
+                        )
+                    ));
+                    
+                    // Debug (remover depois)
+                    if (!$resultado) {
+                        $this->log("Erro ao salvar serviço $servicoId para prestador $prestadorId", 'debug');
+                    }
+                }
             }
         }
     }
@@ -507,15 +563,22 @@ class PrestadoresController extends AppController {
     }
     
     /**
-     * _limparValor - Limpa valor monetário (R$ 200,00 -> 200.00)
+     * _limparValor - Limpa valor monetário detectando formato BR ou US
      * @param string $valor
      * @return float
      */
     private function _limparValor($valor) {
-        $valor = str_replace('R$', '', $valor);
-        $valor = str_replace(' ', '', $valor);
-        $valor = str_replace('.', '', $valor);
-        $valor = str_replace(',', '.', $valor);
+        // Remove R$ e espaços
+        $valor = str_replace(array('R$', ' '), '', $valor);
+        
+        // Verifica se tem vírgula (formato BR: 1.000,00)
+        if (strpos($valor, ',') !== false) {
+            $valor = str_replace('.', '', $valor); // Remove ponto de milhar
+            $valor = str_replace(',', '.', $valor); // Troca vírgula por ponto
+        } 
+        // Se NÃO tem vírgula, mas tem ponto (formato CSV/US: 1000.00),
+        // a gente não faz nada, pois o floatval já entende.
+        
         return floatval($valor);
     }
     

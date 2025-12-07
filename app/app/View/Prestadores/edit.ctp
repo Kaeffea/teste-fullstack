@@ -148,7 +148,6 @@
                 Cadastrar serviço
             </button>
         </div>
-        
         <!-- Botões do Formulário -->
         <div class="form-actions">
             <?php echo $this->Html->link('Cancelar', 

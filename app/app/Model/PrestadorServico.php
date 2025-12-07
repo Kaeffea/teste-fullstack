@@ -28,8 +28,8 @@ class PrestadorServico extends AppModel {
             )
         ),
         'valor' => array(
-            'decimal' => array(
-                'rule' => array('decimal', 2),
+            'numeric' => array(
+                'rule' => 'numeric',
                 'message' => 'Valor inválido'
             ),
             'notBlank' => array(
