@@ -1,3 +1,4 @@
+<!-- add.ctp -->
 <?php $this->assign('title', 'Cadastro de Prestador'); ?>
 
 <div class="main-container">
@@ -172,28 +173,7 @@
 </div>
 
 <!-- Modal Cadastrar Serviço -->
-<div id="modal-servico" class="modal-overlay" style="display: none;">
-    <div class="modal">
-        <div class="modal-header">
-            <h3 class="modal-title">Cadastre um serviço</h3>
-        </div>
-        
-        <div class="form-group" style="margin-bottom: 16px;">
-            <label>Nome do Serviço</label>
-            <input type="text" id="novo-servico-nome" placeholder="Planejamento e Arquitetura">
-        </div>
-        
-        <div class="form-group">
-            <label>Descrição</label>
-            <input type="text" id="novo-servico-descricao" placeholder="Adicione uma descrição">
-        </div>
-        
-        <div class="modal-actions">
-            <button type="button" class="btn-cancel" onclick="fecharModalServico()">Cancelar</button>
-            <button type="button" class="btn-submit" onclick="salvarNovoServico()">Cadastrar</button>
-        </div>
-    </div>
-</div>
+<?php echo $this->element('modal_servico'); ?>
 
 <script>
 jQuery(function($) {
@@ -406,5 +386,94 @@ jQuery(function($) {
             console.log('Serviço ID:', id, 'Valor:', $(this).find('.valor-input').val());
         });
     });
+    // Callback quando novo serviço é cadastrado
+    window.onNovoServicoCadastrado = function(servico) {
+        console.log('Novo serviço cadastrado:', servico);
+        
+        // Adicionar no dropdown
+        const $dropdown = $('.servicos-dropdown-list');
+        const novaOpcao = $('<label>', {
+            class: 'servicos-dropdown-item',
+            'data-nome': servico.nome.toLowerCase()
+        }).append(
+            $('<input>', {
+                type: 'checkbox',
+                class: 'servico-option',
+                'data-id': servico.id
+            })
+        ).append(
+            $('<span>').text(servico.nome)
+        );
+        
+        $dropdown.append(novaOpcao);
+        
+        // Adicionar item na grid (escondido)
+        const novoItem = $('<div>', {
+            class: 'servico-item',
+            id: 'servico-item-' + servico.id,
+            'data-servico-id': servico.id,
+            style: 'display:none;'
+        }).append(
+            $('<span>', {class: 'servico-nome'}).text(servico.nome)
+        ).append(
+            $('<div>', {class: 'servico-valor-input'}).append(
+                $('<input>', {
+                    type: 'text',
+                    name: 'data[Servicos][' + servico.id + '][valor]',
+                    id: 'valor_' + servico.id,
+                    placeholder: 'R$ 0,00',
+                    class: 'valor-input'
+                })
+            )
+        ).append(
+            $('<input>', {
+                type: 'hidden',
+                name: 'data[Servicos][' + servico.id + '][checked]',
+                id: 'checked_' + servico.id,
+                value: ''
+            })
+        );
+        
+        $('#servicos-selecionados').append(novoItem);
+        
+        // Aplicar máscara no novo input
+        novoItem.find('.valor-input').each(function() {
+            $(this).on('input', function(e) {
+                let value = e.target.value.replace(/\D/g, '');
+                if (value) {
+                    value = (parseFloat(value) / 100).toFixed(2);
+                    value = value.replace('.', ',');
+                    value = value.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+                    e.target.value = 'R$ ' + value;
+                }
+            });
+            $(this).on('blur', function(e) {
+                let value = e.target.value.replace(/\D/g, '');
+                if (value) {
+                    value = (parseFloat(value) / 100).toFixed(2);
+                    e.target.value = value;
+                }
+            });
+            $(this).on('focus', function(e) {
+                let value = e.target.value.replace(/\D/g, '');
+                if (value) {
+                    value = (parseFloat(value) / 100).toFixed(2);
+                    value = value.replace('.', ',');
+                    value = value.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+                    e.target.value = 'R$ ' + value;
+                }
+            });
+        });
+        
+        // Bind evento no novo checkbox
+        novaOpcao.find('.servico-option').on('change', function() {
+            const id = $(this).data('id');
+            syncRow(id, $(this).is(':checked'));
+            updateTags();
+        });
+        
+        // Mostrar alerta de sucesso
+        alert('Serviço "' + servico.nome + '" cadastrado com sucesso! Agora você pode selecioná-lo.');
+    };
 });
 </script>
