@@ -1,4 +1,4 @@
-nome;sobrenome;email;telefone;servicos;precos
+nome;sobrenome;email;telefone;servicos;valores
 Ana;Silva;ana.silva@example.com;(11)98123-0001;Desenvolvimento Backend|SEO & Otimização;650|320
 Bruno;Souza;bruno.souza@example.com;(11)98123-0002;Design Gráfico;180
 Carla;Pereira;carla.pereira@example.com;(11)98123-0003;Infraestrutura & Redes|Manutenção de Sistemas;520|340

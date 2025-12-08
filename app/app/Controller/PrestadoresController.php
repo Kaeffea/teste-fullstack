@@ -982,5 +982,66 @@ public function excluir_servico($id = null) {
     }
 }
 
-
+    /**
+     * dashboard - Página inicial com estatísticas
+     * GET /prestadores/dashboard
+     */
+    public function dashboard() {
+        // Total de prestadores
+        $totalPrestadores = $this->Prestador->find('count');
+        
+        // Total de serviços
+        $totalServicos = $this->Servico->find('count');
+        
+        // Total de relações (quantos serviços estão sendo prestados)
+        $totalRelacoes = $this->PrestadorServico->find('count');
+        
+        // Valor médio dos serviços
+        $valorMedio = $this->PrestadorServico->find('first', array(
+            'fields' => array('AVG(PrestadorServico.valor) as media')
+        ));
+        
+        // Serviços mais oferecidos (top 5)
+        $servicosMaisOferecidos = $this->PrestadorServico->find('all', array(
+            'fields' => array(
+                'Servico.nome',
+                'COUNT(PrestadorServico.id) as total',
+                'AVG(PrestadorServico.valor) as media_preco'
+            ),
+            'contain' => array('Servico'),
+            'group' => 'PrestadorServico.servico_id',
+            'order' => 'total DESC',
+            'limit' => 5
+        ));
+        
+        // Prestadores mais versáteis (que oferecem mais serviços)
+        $prestadoresVersateis = $this->PrestadorServico->find('all', array(
+            'fields' => array(
+                'Prestador.nome',
+                'Prestador.sobrenome',
+                'COUNT(PrestadorServico.id) as total_servicos'
+            ),
+            'contain' => array('Prestador'),
+            'group' => 'PrestadorServico.prestador_id',
+            'order' => 'total_servicos DESC',
+            'limit' => 5
+        ));
+        
+        // Últimos prestadores cadastrados
+        $ultimosCadastrados = $this->Prestador->find('all', array(
+            'order' => 'Prestador.created DESC',
+            'limit' => 5
+        ));
+        
+        // Enviar para view
+        $this->set(compact(
+            'totalPrestadores',
+            'totalServicos',
+            'totalRelacoes',
+            'valorMedio',
+            'servicosMaisOferecidos',
+            'prestadoresVersateis',
+            'ultimosCadastrados'
+        ));
+    }
 }
