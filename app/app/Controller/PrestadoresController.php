@@ -41,9 +41,14 @@ class PrestadoresController extends AppController {
         // Configurar o model para usar Containable
         $this->Prestador->Behaviors->load('Containable');
         
-        // Busca (se houver termo de busca)
+        // Condições de busca
         $conditions = array();
         $busca = '';
+        $servicosFiltro = array();
+        $precoMin = null;
+        $precoMax = null;
+        
+        // Busca por nome/email
         if (!empty($this->request->query['busca'])) {
             $busca = $this->request->query['busca'];
             $conditions['OR'] = array(
@@ -51,6 +56,51 @@ class PrestadoresController extends AppController {
                 'Prestador.sobrenome LIKE' => '%' . $busca . '%',
                 'Prestador.email LIKE' => '%' . $busca . '%'
             );
+        }
+        
+        // Filtro por serviços
+        if (!empty($this->request->query['servicos']) && is_array($this->request->query['servicos'])) {
+            $servicosFiltro = array_map('intval', $this->request->query['servicos']);
+        }
+        
+        // Filtro por faixa de preço
+        if (!empty($this->request->query['preco_min'])) {
+            $precoMin = floatval($this->request->query['preco_min']);
+        }
+        
+        if (!empty($this->request->query['preco_max'])) {
+            $precoMax = floatval($this->request->query['preco_max']);
+        }
+        
+        // Se tem filtro de serviços ou preço, precisamos fazer join manual
+        if (!empty($servicosFiltro) || $precoMin !== null || $precoMax !== null) {
+            // Buscar IDs dos prestadores que atendem aos critérios
+            $conditionsServicos = array();
+            
+            if (!empty($servicosFiltro)) {
+                $conditionsServicos['PrestadorServico.servico_id'] = $servicosFiltro;
+            }
+            
+            if ($precoMin !== null) {
+                $conditionsServicos['PrestadorServico.valor >='] = $precoMin;
+            }
+            
+            if ($precoMax !== null) {
+                $conditionsServicos['PrestadorServico.valor <='] = $precoMax;
+            }
+            
+            $prestadoresIds = $this->PrestadorServico->find('list', array(
+                'conditions' => $conditionsServicos,
+                'fields' => array('PrestadorServico.prestador_id', 'PrestadorServico.prestador_id'),
+                'group' => 'PrestadorServico.prestador_id'
+            ));
+            
+            if (!empty($prestadoresIds)) {
+                $conditions['Prestador.id'] = array_values($prestadoresIds);
+            } else {
+                // Nenhum prestador atende aos critérios
+                $conditions['Prestador.id'] = 0;
+            }
         }
         
         // Aplicar condições na configuração do Paginator
@@ -72,11 +122,23 @@ class PrestadoresController extends AppController {
             }
         }
         
+        // Buscar todos os serviços para o filtro
+        $todosServicos = $this->Servico->find('list', array(
+            'fields' => array('Servico.id', 'Servico.nome'),
+            'order' => 'Servico.nome ASC'
+        ));
+        
         // Enviar para a view
-        $this->set('prestadores', $prestadores);
-        $this->set('busca', $busca);
+        $this->set(compact(
+            'prestadores',
+            'busca',
+            'todosServicos',
+            'servicosFiltro',
+            'precoMin',
+            'precoMax'
+        ));
     }
-    
+
     public function add() {
         if ($this->request->is('post')) {
             $this->Prestador->create();
