@@ -1688,3 +1688,257 @@ body {
         display: none;
     }
 }
+
+/* ============================================
+   FILTROS AVANÇADOS (NOVO)
+   ============================================ */
+.filters-bar {
+    padding: 0 24px 20px; 
+    margin-top: -8px;    
+}
+
+.filters-form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+/* Botão "Filtros Avançados" */
+.filter-group {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+}
+
+.btn-filter {
+    padding: 9px 16px;
+    background: #FFFFFF;
+    border: 1px solid #D0D5DD;
+    border-radius: 10px;
+    color: #344054;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.2s;
+    position: relative;
+}
+
+.btn-filter:hover {
+    background: #F9FAFB;
+    border-color: #98A2B3;
+    transform: translateY(-1px);
+}
+
+.btn-filter.active {
+    background: #EF4444;
+    border-color: #EF4444;
+    color: #FFFFFF;
+}
+
+.filter-badge {
+    position: absolute;
+    top: -6px;
+    right: -6px;
+    background: #EF4444;
+    color: #FFFFFF;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 700;
+}
+
+/* Painel em forma de "card" embaixo do botão */
+.filtros-panel {
+    margin-top: 8px;
+    background: #FFFFFF;
+    border: 1px solid #E5E7EB;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(15, 23, 42, 0.12);
+    display: none;            /* o JS continua usando display block/none */
+}
+
+.filtros-content {
+    padding: 20px 24px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px 32px;
+}
+
+/* Cada bloco (Serviços / Preço) vira uma coluna responsiva */
+.filtro-section {
+    flex: 1 1 280px;          /* cresce, mas tem largura mínima decente */
+    margin-bottom: 0;
+}
+
+.filtro-label {
+    display: block;
+    font-size: 14px;
+    font-weight: 600;
+    color: #374151;
+    margin-bottom: 10px;
+}
+
+/* Lista de serviços em "cardzinho" com scroll */
+.filtro-checkboxes {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 8px;
+    max-height: 220px;       /* não cresce infinito */
+    overflow-y: auto;
+    padding-right: 4px;      /* espaço pro scroll não comer o texto */
+}
+
+.filtro-checkbox {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    background: #F9FAFB;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.filtro-checkbox:hover {
+    background: #F3F4F6;
+}
+
+.filtro-checkbox input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+    accent-color: #EF4444;
+}
+
+.filtro-checkbox span {
+    font-size: 14px;
+    color: #374151;
+    font-weight: 500;
+}
+
+/* Faixa de preço ao lado no desktop */
+.filtro-preco {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.filtro-preco input {
+    flex: 1;
+    min-width: 140px;
+    padding: 9px 12px;
+    border: 1px solid #D0D5DD;
+    border-radius: 8px;
+    font-size: 14px;
+}
+
+/* Ações dos filtros (limpar / aplicar) */
+.filtro-actions {
+    margin-top: 18px;
+    padding-top: 18px;
+    border-top: 1px solid #E5E7EB;
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    width: 100%;
+}
+
+.btn-limpar-filtros {
+    padding: 9px 16px;
+    background: #FFFFFF;
+    border: 1px solid #D0D5DD;
+    border-radius: 8px;
+    color: #374151;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-limpar-filtros:hover {
+    background: #F9FAFB;
+}
+
+.btn-aplicar-filtros {
+    padding: 9px 16px;
+    background: #EF4444;
+    border: none;
+    border-radius: 8px;
+    color: #FFFFFF;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-aplicar-filtros:hover {
+    background: #DC2626;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+}
+
+/* ---------- Mobile / tablet ---------- */
+@media (max-width: 768px) {
+    .filters-bar {
+        padding: 0 16px 16px;
+    }
+
+    .filtros-content {
+        padding: 16px;
+        flex-direction: column;
+        gap: 16px;
+    }
+
+    .filtro-section {
+        flex: 1 1 auto;
+    }
+
+    .filtro-checkboxes {
+        grid-template-columns: 1fr;   /* uma coluna só */
+        max-height: 200px;
+    }
+
+    .filtro-preco {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .filtro-preco input {
+        width: 100%;
+    }
+
+    .filtro-actions {
+        flex-direction: column-reverse;
+        align-items: stretch;
+    }
+
+    .btn-limpar-filtros,
+    .btn-aplicar-filtros {
+        width: 100%;
+        justify-content: center;
+        text-align: center;
+    }
+
+    .filter-group {
+    width: 100%;
+    }
+
+    .btn-filter {
+        width: 100%;
+        justify-content: center;   /* ícone + texto centralizados */
+    }
+
+    /* Painel de filtros bem encaixado na tela do celular */
+    .filtros-panel {
+        left: 16px;
+        right: 16px;
+    }
+}
