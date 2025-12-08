@@ -30,7 +30,7 @@ body {
    HEADER DA PÁGINA
    ============================================ */
 .page-header {
-    padding: 40px 48px 32px;
+    padding: 40px 24px 32px;
     border-bottom: 1px solid #EAECF0;
 }
 
@@ -51,7 +51,7 @@ body {
    BARRA DE AÇÕES (Busca + Botões)
    ============================================ */
 .actions-bar {
-    padding: 20px 48px;
+    padding: 20px 24px;
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -118,6 +118,28 @@ body {
     transition: all 0.2s;
 }
 
+.btn-view-all {
+    padding: 10px 18px;
+    background: #EF4444;
+    border: none;
+    border-radius: 8px;
+    color: #ffffff;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    transition: all 0.2s;
+}
+
+.btn-view-all:hover {
+    background: #DC2626;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+}
+
+
 .btn-import:hover {
     background: #F9FAFB;
     border-color: #98A2B3;
@@ -143,6 +165,28 @@ body {
     background: #DC2626;
     transform: translateY(-1px);
     box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+}
+
+/* Botão Voltar para Dashboard */
+.btn-dashboard {
+    padding: 10px 16px;
+    background: #ffffff;
+    border: 1px solid #D0D5DD;
+    border-radius: 8px;
+    color: #344054;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.2s;
+}
+
+.btn-dashboard:hover {
+    background: #F9FAFB;
+    box-shadow: 0 1px 2px rgba(16, 24, 40, 0.05);
+    transform: translateY(-1px);
 }
 
 /* ============================================
@@ -281,7 +325,7 @@ body {
    PAGINAÇÃO
    ============================================ */
 .pagination-container {
-    padding: 16px 48px;
+    padding: 16px 24px;
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -454,11 +498,11 @@ body {
     border: 2px solid #EAECF0;
 }
 
-/* Serviços (seleção e lista) */
 .servicos-select-row {
     display: flex;
+    flex-wrap: wrap;
     gap: 12px;
-    align-items: center;
+    align-items: flex-start;
     margin-top: 16px;
     margin-bottom: 12px;
 }
@@ -570,9 +614,9 @@ body {
 }
 
 .servico-more-btn {
-    width: 32px;
-    height: 32px;
-    border-radius: 6px;
+    width: 28px;
+    height: 28px;
+    border-radius: 999px;
     border: 1px solid #D0D5DD;
     background: #FFFFFF;
     display: flex;
@@ -1097,6 +1141,28 @@ body {
 /* ============================================
    RESPONSIVE
    ============================================ */
+
+
+@media (max-width: 1024px) {
+    .servicos-select-row {
+        flex-direction: column;   /* força coluna */
+        align-items: stretch;
+    }
+
+    .servicos-select-wrapper {
+        width: 100%;
+    }
+
+    .servicos-select {
+        width: 100%;
+    }
+
+    .btn-add-servico-inline {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
 @media (max-width: 768px) {
     .main-container {
         margin: 20px;
@@ -1104,27 +1170,31 @@ body {
     }
     
     .page-header {
-        padding: 24px;
+        padding: 24px 16px;
     }
     
     .actions-bar {
-        padding: 16px 24px;
+        padding: 16px 16px;
         flex-direction: column;
         align-items: stretch;
+        gap: 12px;
     }
     
     .search-input {
         max-width: 100%;
+        width: 100%;
     }
     
     .button-group {
         width: 100%;
+        flex-direction: column;          /* bota os botões em coluna no mobile */
     }
     
+    .btn-dashboard,
     .btn-import,
     .btn-add {
-        flex: 1;
-        justify-content: center;
+        width: 100%;                     /* ocupa toda a largura */
+        justify-content: center;         /* centraliza ícone + texto */
     }
     
     .prestadores-table {
@@ -1137,19 +1207,133 @@ body {
     }
     
     .form-container {
-        padding: 24px;
+        padding: 24px 16px;
     }
     
     .form-row {
         grid-template-columns: 1fr;
     }
     
+    /* Botões do formulário em coluna, full width */
+    .form-actions {
+        flex-direction: column-reversed;
+        align-items: stretch;
+        gap: 10px;
+    }
+
+    .form-actions .btn-cancel,
+    .form-actions .btn-submit {
+        width: 100%;
+        justify-content: center;
+        text-align: center;
+    }
+
     .pagination-container {
-        padding: 16px 24px;
+        padding: 12px 16px;
         flex-direction: column;
-        gap: 12px;
+        align-items: flex-start;
+        gap: 8px;
+    }
+
+        /* Linha do select de serviços em coluna no mobile */
+    .servicos-select-row {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+        margin-top: 12px;
+    }
+
+    .servicos-select-wrapper {
+        width: 100%;
+    }
+
+    .servicos-select {
+        width: 100%;
+    }
+
+    .btn-add-servico-inline {
+        width: 100%;
+        justify-content: center;
+    }
+
+    /* Ajuste do dropdown em telas menores */
+    .servicos-dropdown {
+        left: 0;
+        right: 0;
+    }
+
+        .servicos-grid {
+        margin-top: 12px;
+        gap: 10px;
+    }
+
+    .servico-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+
+    .servico-nome {
+        width: 100%;
+    }
+
+    .servico-valor-input {
+        width: 100%;
+    }
+
+    .servico-valor-input input {
+        width: 100%;
+    }
+
+        .servicos-dropdown-item {
+        padding: 8px 10px;
+    }
+
+    .servico-more-btn {
+        width: 24px;
+        height: 24px;
+    }
+
+    .icon-more {
+        width: 14px;
+        height: 14px;
+    }
+
+        /* Itens do dropdown ficam em coluna */
+    .servicos-dropdown-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 4px;
+    }
+
+    .servicos-dropdown-label {
+        width: 100%;
+    }
+
+    .servicos-dropdown-name {
+        white-space: normal;   /* deixa quebrar linha */
+        overflow: visible;
+        text-overflow: clip;
+    }
+
+    .servico-more-btn {
+        align-self: flex-end;  /* vai pra direita, embaixo do texto */
+        margin-top: 4px;
     }
 }
+
+
+    /* Wrapper responsivo da tabela */
+    .table-responsive {
+        width: 100%;
+        overflow-x: auto;
+    }
+
+    /* Garante largura mínima pra não quebrar demais em telas muito estreitas */
+    .prestadores-table {
+        width: 100%;
+        min-width: 720px;
+    }
 
 /* ============================================
    ÍCONES SVG (inline)
@@ -1461,6 +1645,18 @@ body {
     color: #DC2626;
     transform: translateX(4px);
 }
+
+@media (max-width: 768px) {
+    .recent-item {
+        flex-direction: column; 
+        align-items: flex-start;  
+    }
+
+    .recent-link {
+        margin-top: 8px;
+    }
+}
+
 
 /* Responsive Dashboard */
 @media (max-width: 1024px) {
