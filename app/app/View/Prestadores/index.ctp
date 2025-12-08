@@ -151,7 +151,7 @@
 
     
     <!-- Actions Bar -->
-    <div class="actions-bar">
+        <div class="actions-bar">
         <!-- Busca -->
         <div class="search-input">
             <svg class="search-icon icon-search" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -173,12 +173,46 @@
         
         <style>
             .btn-add,
-            .btn-import {
+            .btn-import,
+            .btn-dashboard {
                 text-decoration: none !important;
             }
+
+            .btn-dashboard {
+                display: inline-flex;
+                align-items: center;
+                gap: 8px;
+                padding: 8px 14px;
+                border-radius: 8px;
+                border: 1px solid #D0D5DD;
+                background: #FFFFFF;
+                color: #344054;
+                font-size: 14px;
+                font-weight: 500;
+                cursor: pointer;
+                transition: background 0.2s, box-shadow 0.2s, transform 0.1s;
+            }
+
+            .btn-dashboard:hover {
+                background: #F9FAFB;
+                box-shadow: 0 1px 2px rgba(16, 24, 40, 0.05);
+                transform: translateY(-1px);
+            }
+
+            .icon-home {
+                width: 16px;
+                height: 16px;
+            }
         </style>
+
         <!-- Botões -->
         <div class="button-group">
+            <?php echo $this->Html->link(
+                '<svg class="icon-home" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10l9-7 9 7v10a1 1 0 01-1 1h-5a1 1 0 01-1-1v-4H9v4a1 1 0 01-1 1H3a1 1 0 01-1-1V10z"></path></svg> Voltar para o dashboard',
+                '/',
+                array('class' => 'btn-dashboard', 'escape' => false)
+            ); ?>
+
             <?php echo $this->Html->link(
                 '<svg class="icon-upload" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg> Importar',
                 array('action' => 'importar'),
@@ -192,6 +226,7 @@
             ); ?>
         </div>
     </div>
+
     
     <!-- Tabela -->
     <?php if (empty($prestadores)): ?>
