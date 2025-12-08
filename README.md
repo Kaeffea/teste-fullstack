@@ -47,8 +47,8 @@ Sistema web para gerenciamento de prestadores de serviço, desenvolvido como tes
 
 ### Passo 1: Clonar o repositório
 ```bash
-git clone https://github.com/SEU_USUARIO/teste-fullstack-joao.git
-cd teste-fullstack-joao
+git clone https://github.com/Kaeffea/teste-fullstack
+cd teste-fullstack
 ```
 
 ### Passo 2: Subir os containers
@@ -189,7 +189,7 @@ rm -rf /var/www/html/app/tmp/cache/*
 
 ## 👤 Autor
 
-[Kauê Fortaleza Ferreira]
+Kauê Fortaleza Ferreira
 - GitHub: [@Kaeffea](https://github.com/Kaeffea/)
 - LinkedIn: [Kauê Ferreira](https://www.linkedin.com/in/kau%C3%AA-ferreira-a67546215/)
 
