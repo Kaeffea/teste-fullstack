@@ -151,7 +151,7 @@
 
     
     <!-- Actions Bar -->
-        <div class="actions-bar">
+    <div class="actions-bar">
         <!-- Busca -->
         <div class="search-input">
             <svg class="search-icon icon-search" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -227,6 +227,82 @@
         </div>
     </div>
 
+    <!-- Filtros Avançados -->
+    <div class="filters-bar">
+        <?php echo $this->Form->create(false, array(
+            'type' => 'get',
+            'url' => array('controller' => 'prestadores', 'action' => 'index'),
+            'id' => 'filtros-form',
+            'class' => 'filters-form'
+        )); ?>
+        
+        <div class="filter-group">
+            <button type="button" class="btn-filter" onclick="toggleFiltros()">
+                <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path>
+                </svg>
+                Filtros Avançados
+                <?php if (!empty($servicosFiltro) || $precoMin !== null || $precoMax !== null): ?>
+                    <span class="filter-badge"><?php 
+                        $count = count($servicosFiltro);
+                        if ($precoMin !== null || $precoMax !== null) $count++;
+                        echo $count;
+                    ?></span>
+                <?php endif; ?>
+            </button>
+        </div>
+        
+        <div id="filtros-panel" class="filtros-panel" style="display: none;">
+            <div class="filtros-content">
+                <!-- Filtro de Serviços -->
+                <div class="filtro-section">
+                    <label class="filtro-label">Serviços</label>
+                    <div class="filtro-checkboxes">
+                        <?php foreach ($todosServicos as $id => $nome): ?>
+                            <label class="filtro-checkbox">
+                                <input type="checkbox" 
+                                       name="servicos[]" 
+                                       value="<?php echo $id; ?>"
+                                       <?php echo in_array($id, $servicosFiltro) ? 'checked' : ''; ?>>
+                                <span><?php echo h($nome); ?></span>
+                            </label>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
+                
+                <!-- Filtro de Preço -->
+                <div class="filtro-section">
+                    <label class="filtro-label">Faixa de Preço</label>
+                    <div class="filtro-preco">
+                        <input type="number" 
+                               name="preco_min" 
+                               placeholder="R$ Mínimo"
+                               value="<?php echo $precoMin; ?>"
+                               step="0.01"
+                               min="0">
+                        <span style="color: #667085; padding: 0 8px;">até</span>
+                        <input type="number" 
+                               name="preco_max" 
+                               placeholder="R$ Máximo"
+                               value="<?php echo $precoMax; ?>"
+                               step="0.01"
+                               min="0">
+                    </div>
+                </div>
+                
+                <div class="filtro-actions">
+                    <button type="button" class="btn-limpar-filtros" onclick="limparFiltros()">
+                        Limpar Filtros
+                    </button>
+                    <button type="submit" class="btn-aplicar-filtros">
+                        Aplicar Filtros
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <?php echo $this->Form->end(); ?>
+    </div>
     
     <!-- Tabela -->
     <?php if (empty($prestadores)): ?>
@@ -719,4 +795,44 @@ function fecharModalImportacaoErro() {
         type: 'POST'
     });
 }
+
+// Toggle filtros
+function toggleFiltros() {
+    const panel = document.getElementById('filtros-panel');
+    const btn = document.querySelector('.btn-filter');
+    
+    if (panel.style.display === 'none') {
+        panel.style.display = 'block';
+        btn.classList.add('active');
+    } else {
+        panel.style.display = 'none';
+        btn.classList.remove('active');
+    }
+}
+
+// Limpar filtros
+function limparFiltros() {
+    // Desmarcar checkboxes
+    document.querySelectorAll('.filtro-checkbox input[type="checkbox"]').forEach(cb => {
+        cb.checked = false;
+    });
+    
+    // Limpar inputs de preço
+    document.querySelector('input[name="preco_min"]').value = '';
+    document.querySelector('input[name="preco_max"]').value = '';
+    
+    // Submeter formulário vazio
+    document.getElementById('filtros-form').submit();
+}
+
+// Fechar filtros ao clicar fora
+document.addEventListener('click', function(e) {
+    const panel = document.getElementById('filtros-panel');
+    const btn = document.querySelector('.btn-filter');
+    
+    if (panel && btn && !panel.contains(e.target) && !btn.contains(e.target)) {
+        panel.style.display = 'none';
+        btn.classList.remove('active');
+    }
+});
 </script>
