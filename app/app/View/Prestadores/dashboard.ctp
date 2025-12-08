@@ -1,3 +1,4 @@
+<!-- dashboard.ctp -->
 <?php $this->assign('title', 'Dashboard'); ?>
 
 <div class="main-container">
@@ -157,9 +158,8 @@
     </div>
 
     <style>
-            .btn-add
+            .btn-view-all
             {
-                text-decoration: none !important;
                 margin-bottom: 32px;
             }
     </style>
@@ -169,7 +169,7 @@
         <?php echo $this->Html->link(
             'Ver todos os prestadores →',
             array('action' => 'index'),
-            array('class' => 'btn-add', 'style' => 'display: inline-flex;')
+            array('class' => 'btn-view-all', 'style' => 'display: inline-flex;')
         ); ?>
     </div>
 </div>

@@ -234,6 +234,7 @@
             <p>Nenhum prestador encontrado.</p>
         </div>
     <?php else: ?>
+    <div class="table-responsive">
         <table class="prestadores-table">
             <thead>
                 <tr>
@@ -371,6 +372,7 @@
                 <?php endforeach; ?>
             </tbody>
         </table>
+    </div>
         
         <!-- Paginação -->
         <div class="pagination-container">
@@ -426,6 +428,19 @@
     display: block;
 }
 
+@media (max-width: 768px) {
+    .tooltip-servicos {
+        position: fixed;                 
+        left: 50%;
+        bottom: 16px;                      
+        transform: translateX(-50%);
+        width: calc(100% - 32px);        
+        max-width: 420px;
+        min-width: 0;                    
+        margin-top: 0;
+    }
+}
+
 .tooltip-title {
     font-size: 12px;
     font-weight: 600;
@@ -451,9 +466,16 @@
 /* Coluna de ações (header + linhas) */
 .prestadores-table th.actions-column,
 .prestadores-table td.actions-column {
-    width: 72px;
+    width: 80px;
     text-align: right;
     padding-right: 24px;
+}
+
+/* Ajusta os botões de ação das linhas para 40x40 (igual à lixeira do header) */
+.actions-cell .btn-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
 }
 
 /* Botão de excluir selecionados (só ícone) */
@@ -461,16 +483,17 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 36px;
-    height: 36px;
+    width: 40px;
+    height: 40px;
     padding: 0;
-    border-radius: 8px;
+    border-radius: 10px;
     border: 1px solid #F97066;
     background: #F97066;
     color: #FFF;
     cursor: pointer;
     transition: opacity 0.2s, box-shadow 0.2s, background 0.2s, transform 0.1s;
 }
+
 
 .btn-delete-selected.disabled {
     opacity: 0.6;
@@ -515,25 +538,35 @@ jQuery(document).ready(function($) {
         }, 500);
     });
     
+
     /* ------------------- TOOLTIP SERVIÇOS ------------------- */
     $('.badge-servicos').on('click', function(e) {
         e.stopPropagation();
         const id = $(this).data('id');
         const tooltip = $('#tooltip-' + id);
-        
+
         // Fechar outros tooltips
         $('.tooltip-servicos').removeClass('show');
-        
+
         // Toggle deste tooltip
         tooltip.toggleClass('show');
-        
-        // Posicionar próximo ao badge
-        const badgePos = $(this).offset();
-        tooltip.css({
-            top: badgePos.top + 25,
-            left: badgePos.left
-        });
+
+        const isMobile = window.matchMedia("(max-width: 768px)").matches;
+
+        if (!isMobile) {
+            const badgePos = $(this).offset();
+            tooltip.css({
+                top: badgePos.top + 25,
+                left: badgePos.left
+            });
+        } else {
+            tooltip.css({
+                top: '',
+                left: ''
+            });
+        }
     });
+
     
     // Fechar tooltip ao clicar fora
     $(document).on('click', function() {
