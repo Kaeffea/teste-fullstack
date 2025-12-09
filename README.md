@@ -121,8 +121,6 @@ teste-fullstack-joao/
 **prestadores_servicos** (tabela pivô)
 - Relacionamento N:N com campo `valor` (preço específico)
 
-Documentação completa em: `app/Config/Schema/README.md`
-
 ## 📊 Importação CSV
 
 ### Formato do arquivo
