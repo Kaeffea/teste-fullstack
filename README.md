@@ -139,7 +139,7 @@ Arquivo de exemplo: `exemplo-importacao.csv`
 
 ## 🎥 Vídeo Demonstrativo
 
-[LINK DO VÍDEO AQUI - Loom/YouTube]
+[YouTube](https://www.youtube.com/watch?v=emHGU_jr5hk)
 
 Demonstração completa das funcionalidades:
 - CRUD de prestadores
@@ -189,7 +189,7 @@ rm -rf /var/www/html/app/tmp/cache/*
 
 ## 👤 Autor
 
-Kauê Fortaleza Ferreira
+### Kauê Fortaleza Ferreira
 - GitHub: [@Kaeffea](https://github.com/Kaeffea/)
 - LinkedIn: [Kauê Ferreira](https://www.linkedin.com/in/kau%C3%AA-ferreira-a67546215/)
 
