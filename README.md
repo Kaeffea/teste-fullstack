@@ -71,6 +71,11 @@ O banco já está configurado automaticamente via Docker com:
 
 **Executar migrations/seed:**
 ```bash
+docker exec cakephp_db sh -c 'until mysql -uroot -proot -e "SELECT 1" >/dev/null 2>&1; do
+  echo "Aguardando MySQL iniciar...";
+  sleep 2;
+done'
+
 docker exec -i cakephp_db mysql -uroot -proot --default-character-set=utf8 teste_joao < app/app/Config/Schema/schema.sql
 ```
 
