@@ -295,10 +295,6 @@
                 ); ?>
             </div>
         </div>
-
-<div id="filtros-panel" class="filtros-panel" style="display: none;">
-
-        
         <div id="filtros-panel" class="filtros-panel" style="display: none;">
             <div class="filtros-content">
                 <!-- Filtro de Serviços -->
