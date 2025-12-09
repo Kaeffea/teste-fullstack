@@ -142,7 +142,8 @@ body {
 
 .btn-import:hover {
     background: #F9FAFB;
-    border-color: #98A2B3;
+    box-shadow: 0 1px 2px rgba(16, 24, 40, 0.05);
+    transform: translateY(-1px);
 }
 
 /* Botão Add Novo Prestador */
@@ -638,6 +639,34 @@ body {
     stroke: #667085;
     fill: #667085;
 }
+
+.badge-status {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+/* Marcado */
+.badge-status-info {
+    background: #EEF4FF;
+    color: #1D4ED8;
+}
+
+/* Em produção */
+.badge-status-warning {
+    background: #FFFBEB;
+    color: #92400E;
+}
+
+/* Finalizado */
+.badge-status-success {
+    background: #ECFDF3;
+    color: #027A48;
+}
+
 
 
 .servicos-dropdown-item input {
