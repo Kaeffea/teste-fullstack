@@ -38,6 +38,51 @@ CREATE TABLE IF NOT EXISTS `prestadores_servicos` (
   CONSTRAINT `fk_servico` FOREIGN KEY (`servico_id`) REFERENCES `servicos` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
+-- ==========================================
+-- TABELA DE AGENDAMENTOS (cabecalho)
+-- ==========================================
+CREATE TABLE IF NOT EXISTS `agendamentos` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `cliente_nome` varchar(150) NOT NULL,
+  `cliente_email` varchar(150) DEFAULT NULL,
+  `cliente_telefone` varchar(20) DEFAULT NULL,
+  `status` varchar(20) NOT NULL DEFAULT 'rascunho',
+  -- status sugeridos: rascunho, marcado, em_producao, concluido, cancelado
+  `total` decimal(10,2) NOT NULL DEFAULT '0.00',
+  `observacoes` text,
+  `created` datetime DEFAULT NULL,
+  `modified` datetime DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+-- ==========================================
+-- ITENS DO AGENDAMENTO (cada servico + prestador)
+-- ==========================================
+CREATE TABLE IF NOT EXISTS `agendamento_items` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `agendamento_id` int(11) NOT NULL,
+  `prestador_id` int(11) DEFAULT NULL,
+  `servico_id` int(11) NOT NULL,
+  `data_inicio` date NOT NULL,
+  `data_fim` date NOT NULL,
+  `duracao_dias` int(11) NOT NULL DEFAULT 1,
+  `exclusivo` tinyint(1) NOT NULL DEFAULT 0,
+  `status` varchar(20) NOT NULL DEFAULT 'rascunho',
+  `valor` decimal(10,2) NOT NULL DEFAULT '0.00',
+  `created` datetime DEFAULT NULL,
+  `modified` datetime DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `agendamento_id` (`agendamento_id`),
+  KEY `prestador_id` (`prestador_id`),
+  KEY `servico_id` (`servico_id`),
+  CONSTRAINT `fk_item_agendamento` FOREIGN KEY (`agendamento_id`)
+    REFERENCES `agendamentos` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `fk_item_prestador` FOREIGN KEY (`prestador_id`)
+    REFERENCES `prestadores` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `fk_item_servico` FOREIGN KEY (`servico_id`)
+    REFERENCES `servicos` (`id`) ON DELETE RESTRICT
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
 -- Seed
 
 -- Inserir serviços padrão

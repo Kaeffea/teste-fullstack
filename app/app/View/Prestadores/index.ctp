@@ -172,38 +172,68 @@
         </div>
         
         <style>
-            .btn-add,
-            .btn-import,
-            .btn-dashboard {
-                text-decoration: none !important;
-            }
+    .btn-add,
+    .btn-import,
+    .btn-dashboard {
+        text-decoration: none !important;
+    }
 
-            .btn-dashboard {
-                display: inline-flex;
-                align-items: center;
-                gap: 8px;
-                padding: 8px 14px;
-                border-radius: 8px;
-                border: 1px solid #D0D5DD;
-                background: #FFFFFF;
-                color: #344054;
-                font-size: 14px;
-                font-weight: 500;
-                cursor: pointer;
-                transition: background 0.2s, box-shadow 0.2s, transform 0.1s;
-            }
+    .btn-dashboard {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 14px;
+        border-radius: 8px;
+        border: 1px solid #D0D5DD;
+        background: #FFFFFF;
+        color: #344054;
+        font-size: 14px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: background 0.2s, box-shadow 0.2s, transform 0.1s;
+        white-space: nowrap; /* evita quebrar estranho em telas intermediárias */
+    }
 
-            .btn-dashboard:hover {
-                background: #F9FAFB;
-                box-shadow: 0 1px 2px rgba(16, 24, 40, 0.05);
-                transform: translateY(-1px);
-            }
+    .btn-dashboard:hover {
+        background: #F9FAFB;
+        box-shadow: 0 1px 2px rgba(16, 24, 40, 0.05);
+        transform: translateY(-1px);
+    }
 
-            .icon-home {
-                width: 16px;
-                height: 16px;
-            }
-        </style>
+    .icon-home {
+        width: 16px;
+        height: 16px;
+    }
+
+    /* --- Ajuste de responsividade específico dos filtros / Ver agendamentos --- */
+    .filters-right-actions {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+    }
+
+    @media (max-width: 768px) {
+        /* Header dos filtros vira coluna */
+        .filters-header-row {
+            flex-direction: column;
+            align-items: stretch;
+            gap: 8px;
+        }
+
+        .filters-right-actions {
+            width: 100%;
+        }
+
+        /* Só o botão "Ver agendamentos" vira full-width e centralizado */
+        .filters-right-actions .btn-dashboard {
+            width: 100%;
+            justify-content: center;
+            text-align: center;
+            white-space: normal; /* deixa quebrar bonitinho no mobile */
+        }
+    }
+</style>
+
 
         <!-- Botões -->
         <div class="button-group">
@@ -216,7 +246,7 @@
             <?php echo $this->Html->link(
                 '<svg class="icon-upload" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg> Importar',
                 array('action' => 'importar'),
-                array('class' => 'btn-import', 'escape' => false)
+                array('class' => 'btn-dashboard', 'escape' => false)
             ); ?>
             
             <?php echo $this->Html->link(
@@ -236,21 +266,38 @@
             'class' => 'filters-form'
         )); ?>
         
-        <div class="filter-group">
-            <button type="button" class="btn-filter" onclick="toggleFiltros()">
-                <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path>
-                </svg>
-                Filtros Avançados
-                <?php if (!empty($servicosFiltro) || $precoMin !== null || $precoMax !== null): ?>
-                    <span class="filter-badge"><?php 
-                        $count = count($servicosFiltro);
-                        if ($precoMin !== null || $precoMax !== null) $count++;
-                        echo $count;
-                    ?></span>
-                <?php endif; ?>
-            </button>
+        <div class="filters-header-row">
+            <div class="filter-group">
+                <button type="button" class="btn-filter" onclick="toggleFiltros()">
+                    <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path>
+                    </svg>
+                    Filtros Avançados
+                    <?php if (!empty($servicosFiltro) || $precoMin !== null || $precoMax !== null): ?>
+                        <span class="filter-badge"><?php 
+                            $count = count($servicosFiltro);
+                            if ($precoMin !== null || $precoMax !== null) $count++;
+                            echo $count;
+                        ?></span>
+                    <?php endif; ?>
+                </button>
+            </div>
+
+            <div class="filters-right-actions">
+                <?php echo $this->Html->link(
+                    '<svg class="icon-calendar" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M8 7V3m8 4V3M4 11h16M5 5h14a2 2 0 012 2v12a2 2 0 01-2 2H5
+                                a2 2 0 01-2-2V7a2 2 0 012-2z" />
+                    </svg> Ver agendamentos',
+                    array('controller' => 'agendamentos', 'action' => 'index'),
+                    array('class' => 'btn-dashboard', 'escape' => false)
+                ); ?>
+            </div>
         </div>
+
+<div id="filtros-panel" class="filtros-panel" style="display: none;">
+
         
         <div id="filtros-panel" class="filtros-panel" style="display: none;">
             <div class="filtros-content">
@@ -500,6 +547,12 @@
     margin-top: 8px;
 }
 
+.icon-calendar {
+    width: 16px;
+    height: 16px;
+}
+
+
 .tooltip-servicos.show {
     display: block;
 }
@@ -569,6 +622,25 @@
     cursor: pointer;
     transition: opacity 0.2s, box-shadow 0.2s, background 0.2s, transform 0.1s;
 }
+
+.filters-bar {
+    padding: 0 24px 20px; 
+    margin-top: -8px;
+}
+
+/* nova linha de header dos filtros */
+.filters-header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 8px;
+}
+
+.filters-right-actions a.btn-view-all {
+    text-decoration: none !important;
+}
+
 
 
 .btn-delete-selected.disabled {
